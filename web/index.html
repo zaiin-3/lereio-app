@@ -3,14 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Lereio</title>
+  <title>Lereio — Private Space for Two</title>
+
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Cormorant Garamond & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Leaflet Interactive Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     :root {
       --bg-outer: #07090e;
@@ -18,14 +27,14 @@
       --bg-card: #131926;
       --bg-elevated: #1b2436;
       --nav-bg: rgba(19, 25, 38, 0.96);
+      --text-main: #f1f5f9;
+      --text-muted: #8b9bb4;
+      --border-soft: rgba(148, 163, 184, 0.14);
       --accent: #60a5fa;
       --accent-contrast: #08111e;
       --accent-soft: rgba(96, 165, 250, 0.14);
       --accent-glow: rgba(96, 165, 250, 0.11);
-      --text-main: #f1f5f9;
-      --text-muted: #8b9bb4;
-      --border-soft: rgba(148, 163, 184, 0.14);
-      --bottom-nav-height: 58px;
+      --bottom-nav-height: 68px;
     }
 
     * {
@@ -34,62 +43,45 @@
     }
 
     html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
-      height: 100%;
-    }
-
-    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg-outer);
       color: var(--text-main);
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      transition: background-color 0.25s ease, color 0.25s ease;
+      overflow: hidden;
     }
 
     .font-editorial {
-      font-family: 'Instrument Serif', Georgia, serif;
+      font-family: 'Cormorant Garamond', Georgia, serif;
     }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     .app-shell {
-      width: 100%;
-      max-width: 430px;
       height: 100dvh;
-      max-height: 920px;
+      max-height: 100dvh;
       background-color: var(--bg-base);
-      background-image:
-        radial-gradient(circle at 85% 6%, var(--accent-glow) 0%, transparent 45%),
-        radial-gradient(circle at 15% 94%, var(--accent-glow) 0%, transparent 45%);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
-      transition: background-color 0.25s ease;
+      background-image: radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 60%);
     }
 
-    @media (min-width: 450px) {
+    @media (min-width: 768px) {
       .app-shell {
-        height: 92vh;
-        border-radius: 34px;
-        border: 1px solid var(--border-soft);
+        height: 92dvh;
+        max-height: 92dvh;
       }
     }
 
     .surface-card {
       background-color: var(--bg-card);
       border: 1px solid var(--border-soft);
-      border-radius: 20px;
-      transition: background-color 0.25s ease, border-color 0.25s ease;
+      border-radius: 1.5rem;
     }
 
     .surface-pill {
       background-color: var(--bg-elevated);
       border: 1px solid var(--border-soft);
-      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .accent-bg {
@@ -106,60 +98,18 @@
       color: var(--accent);
     }
 
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    #tab-chat {
-      position: relative;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #tab-chat.active-chat {
-      display: flex;
-    }
-
-    #chatMessagesContainer {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 12px 20px 14px 20px;
-    }
-
-    #chatForm {
-      flex: 0 0 auto;
-      width: 100%;
-      margin: 0;
-      padding: 10px 14px calc(10px + var(--bottom-nav-height)) 14px;
-      background-color: var(--bg-card);
-      border-top: 1px solid var(--border-soft);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 10;
-    }
-
+    /* Interactive Mini Map Styling */
     #miniMapContainer {
-      height: 175px;
+      height: 155px;
       width: 100%;
-      border-radius: 16px;
+      border-radius: 1rem;
       z-index: 1;
-      overflow: hidden;
-      background-color: var(--bg-elevated);
     }
+
     .dark-osm-tiles {
-      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(88%) saturate(80%);
+      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%);
     }
-    .leaflet-control-attribution {
-      display: none !important;
-    }
+
     .avatar-pin {
       width: 38px;
       height: 38px;
@@ -173,29 +123,101 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
     }
+
     .avatar-pin img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
+    /* Chat Tab Flex Layout */
+    #tab-chat.active-chat {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0%;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: var(--bottom-nav-height);
+    }
+
+    #chatMessagesContainer {
+      flex: 1 1 0%;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1rem 1.25rem;
+    }
+
+    #chatForm {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      background-color: var(--bg-card);
+      border-top: 1px solid var(--border-soft);
+    }
   </style>
 </head>
-<body>
+<body class="flex items-center justify-center">
 
-  <div class="app-shell">
+  <div class="app-shell w-full max-w-[430px] md:rounded-[34px] md:border md:border-slate-500/20 md:shadow-2xl relative flex flex-col overflow-hidden">
 
-    <!-- ==================== 1. EMAIL & PASSWORD SIGN-IN SCREEN ==================== -->
-    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
-      <div class="pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full accent-bg"></span>
-        <span class="text-[11px] uppercase tracking-[0.26em] text-[var(--text-muted)]">Private Space for Two</span>
+    <!-- ==================== OPTIONAL 4-DIGIT PRIVACY PIN LOCK ==================== -->
+    <div id="pinLockOverlay" class="hidden absolute inset-0 z-50 bg-[var(--bg-base)] flex flex-col items-center justify-between p-8 text-center">
+      <div class="pt-4 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
+        <span class="font-editorial text-3xl text-[var(--text-main)]">Lereio</span>
       </div>
 
-      <div class="w-full max-w-xs space-y-4 my-auto py-4">
+      <div class="space-y-6 w-full max-w-xs">
+        <div class="space-y-1">
+          <div class="w-12 h-12 rounded-2xl accent-soft-bg flex items-center justify-center mx-auto mb-2">
+            <i class="fa-solid fa-lock text-base"></i>
+          </div>
+          <h2 class="font-editorial text-3xl text-[var(--text-main)]">Private Space Locked</h2>
+          <p id="pinLockHint" class="text-xs text-[var(--text-muted)]">Enter your 4-digit PIN to continue</p>
+        </div>
+
+        <div id="pinDotsRow" class="flex items-center justify-center gap-4">
+          <span class="pin-dot w-3.5 h-3.5 rounded-full border border-[var(--text-muted)] transition"></span>
+          <span class="pin-dot w-3.5 h-3.5 rounded-full border border-[var(--text-muted)] transition"></span>
+          <span class="pin-dot w-3.5 h-3.5 rounded-full border border-[var(--text-muted)] transition"></span>
+          <span class="pin-dot w-3.5 h-3.5 rounded-full border border-[var(--text-muted)] transition"></span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 pt-2">
+          <button type="button" data-pin-digit="1" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">1</button>
+          <button type="button" data-pin-digit="2" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">2</button>
+          <button type="button" data-pin-digit="3" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">3</button>
+          <button type="button" data-pin-digit="4" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">4</button>
+          <button type="button" data-pin-digit="5" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">5</button>
+          <button type="button" data-pin-digit="6" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">6</button>
+          <button type="button" data-pin-digit="7" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">7</button>
+          <button type="button" data-pin-digit="8" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">8</button>
+          <button type="button" data-pin-digit="9" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">9</button>
+          <button type="button" id="pinClearBtn" class="h-14 rounded-2xl text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition">Clear</button>
+          <button type="button" data-pin-digit="0" class="pin-key h-14 rounded-2xl surface-pill text-lg font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition">0</button>
+          <button type="button" id="pinBackspaceBtn" class="h-14 rounded-2xl text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition">
+            <i class="fa-solid fa-delete-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Device Privacy Lock</p>
+    </div>
+
+    <!-- ==================== 1. EMAIL & PASSWORD SIGN IN SCREEN ==================== -->
+    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
+      <div class="pt-4 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
+        <span class="font-editorial text-3xl tracking-wide text-[var(--text-main)]">Lereio</span>
+      </div>
+
+      <div class="w-full max-w-xs space-y-5 my-auto py-4">
         <div class="space-y-1.5">
-          <h1 class="font-editorial text-6xl tracking-tight text-[var(--text-main)]">Lereio</h1>
+          <h1 class="font-editorial text-4xl text-[var(--text-main)] leading-tight">A quiet space built just for two.</h1>
           <p id="authSubtitle" class="text-xs text-[var(--text-muted)] leading-relaxed">
             Sign in with your account to save your space in the cloud and connect with your partner.
           </p>
@@ -311,7 +333,6 @@
             <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
           </button>
 
-          <!-- In-App Notification Bell -->
           <button id="openNotificationsBtn" class="relative w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Activity & Notifications">
             <i class="fa-regular fa-bell text-xs accent-text"></i>
             <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full accent-bg text-[9px] font-bold flex items-center justify-center">0</span>
@@ -329,34 +350,81 @@
         <!-- ==================== TAB 1: HOME / OVERVIEW ==================== -->
         <section id="tab-home" class="flex-1 overflow-y-auto no-scrollbar p-5 pb-24 space-y-4">
 
-          <!-- Pull-to-Refresh Indicator -->
           <div id="pullRefreshIndicator" class="hidden items-center justify-center gap-2 text-xs accent-text py-1">
             <i id="pullRefreshIcon" class="fa-solid fa-rotate text-xs"></i>
             <span id="pullRefreshLabel">Pull down to refresh</span>
           </div>
 
-          <div class="surface-card p-4 flex items-center justify-between">
-            <div class="space-y-0.5">
-              <div class="flex items-center gap-2">
-                <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
-                <button type="button" id="homeRefreshBtn" class="text-[11px] text-[var(--text-muted)] hover:accent-text transition" title="Refresh Home">
-                  <i id="homeRefreshIcon" class="fa-solid fa-rotate-right"></i>
-                </button>
+          <!-- Greeting + Quick "Thinking of You" Status Card -->
+          <div class="surface-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
+                  <button type="button" id="homeRefreshBtn" class="text-[11px] text-[var(--text-muted)] hover:accent-text transition" title="Refresh Home">
+                    <i id="homeRefreshIcon" class="fa-solid fa-rotate-right"></i>
+                  </button>
+                </div>
+                <h1 class="font-editorial text-3xl text-[var(--text-main)]">
+                  <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
+                </h1>
+                <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
               </div>
-              <h1 class="font-editorial text-3xl text-[var(--text-main)]">
-                <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
-              </h1>
-              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
+
+              <div class="flex items-center -space-x-2.5 shrink-0">
+                <div id="heroMyAvatarWrap" onclick="document.getElementById('openProfileBtn').click()" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center cursor-pointer font-semibold text-sm accent-text" title="Edit your profile">
+                  Me
+                </div>
+                <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
+                  ♡
+                </div>
+              </div>
             </div>
 
-            <div class="flex items-center -space-x-2.5 shrink-0">
-              <div id="heroMyAvatarWrap" onclick="document.getElementById('openProfileBtn').click()" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center cursor-pointer font-semibold text-sm accent-text" title="Edit your profile">
-                Me
-              </div>
-              <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
-                ♡
+            <!-- Quick Check-In Status Row -->
+            <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-[var(--border-soft)]">
+              <button type="button" id="openMyStatusBtn" class="surface-pill rounded-xl px-2.5 py-2 text-left flex items-center justify-between gap-1.5 hover:border-[var(--accent)]/50 transition" title="Update your vibe">
+                <div class="min-w-0">
+                  <p id="myStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Your vibe</p>
+                  <p id="myStatusText" class="text-xs font-medium text-[var(--text-main)] truncate mt-0.5">💭 Set vibe...</p>
+                </div>
+                <i class="fa-solid fa-chevron-down text-[9px] text-[var(--text-muted)] shrink-0"></i>
+              </button>
+
+              <div class="surface-pill rounded-xl px-2.5 py-2 text-left min-w-0">
+                <p id="partnerStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Partner's vibe</p>
+                <p id="partnerStatusText" class="text-xs font-medium text-[var(--text-main)] truncate mt-0.5">♡ Quietly here</p>
               </div>
             </div>
+          </div>
+
+          <!-- Rotating Whispers & Inside Notes Card -->
+          <div class="surface-card p-4 space-y-2 border-l-2 border-l-[var(--accent)]">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-6 h-6 rounded-lg accent-soft-bg flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-sparkles text-[10px]"></i>
+                </span>
+                <span id="whisperTagLabel" class="text-[10px] uppercase tracking-[0.18em] accent-text font-semibold truncate">Inside Whisper</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" id="pinWhisperBtn" class="hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Pin / Unpin note">
+                  <i id="pinWhisperIcon" class="fa-regular fa-star text-[10px]"></i>
+                </button>
+                <button type="button" id="deleteWhisperBtn" class="hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-rose-400 transition" title="Delete note">
+                  <i class="fa-regular fa-trash-can text-[10px]"></i>
+                </button>
+                <button type="button" id="addCustomWhisperBtn" class="w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Save an inside note for us">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                </button>
+                <button type="button" id="cycleWhisperBtn" class="w-7 h-7 rounded-full surface-pill flex items-center justify-center accent-text hover:opacity-90 transition" title="Next whisper">
+                  <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                </button>
+              </div>
+            </div>
+            <p id="dailyWhisperText" class="font-editorial italic text-xl text-[var(--text-main)] leading-snug">
+              "Still our quiet little corner away from everyone else."
+            </p>
           </div>
 
           <div id="inviteBannerCard" class="surface-card p-4 flex items-center justify-between border border-dashed border-[var(--accent)]/50">
@@ -412,8 +480,11 @@
             </div>
           </div>
 
+          <!-- Start Date, Monthsary & Anniversary Milestone Card -->
           <div class="surface-card p-6 flex flex-col items-center text-center">
             <div id="counterConfiguredView" class="w-full flex flex-col items-center">
+              <p id="startDateBadgeText" class="text-[10px] uppercase tracking-[0.2em] accent-text font-semibold mb-1">Since —</p>
+
               <div class="relative w-40 h-40 flex items-center justify-center my-1">
                 <svg class="w-full h-full -rotate-90" viewBox="0 0 160 160">
                   <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-elevated)" stroke-width="8" />
@@ -443,11 +514,11 @@
 
               <div class="grid grid-cols-2 gap-2.5 w-full mt-2.5 text-left">
                 <div class="surface-pill rounded-2xl p-3">
-                  <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
+                  <p id="monthsaryLabel" class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
                   <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
                 </div>
                 <div class="surface-pill rounded-2xl p-3">
-                  <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
+                  <p id="anniversaryLabel" class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
                   <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
                 </div>
               </div>
@@ -455,9 +526,9 @@
 
             <div id="counterUnsetView" class="hidden py-5 space-y-3">
               <p class="font-editorial text-3xl text-[var(--text-main)]">Set Your Start Date</p>
-              <p class="text-xs text-[var(--text-muted)] max-w-[240px] mx-auto">Add your anniversary date to start your live day counter.</p>
+              <p class="text-xs text-[var(--text-muted)] max-w-[240px] mx-auto">Add your start date to anchor your days, monthsaries, and anniversaries.</p>
               <button onclick="document.getElementById('openSettingsBtn').click()" class="px-5 py-2.5 rounded-xl accent-bg text-xs font-semibold">
-                Choose Date
+                Choose Start Date
               </button>
             </div>
           </div>
@@ -510,9 +581,9 @@
             </div>
           </div>
 
-          <div id="latestMemoryHero" class="hidden relative rounded-2xl overflow-hidden border border-[var(--border-soft)] h-44">
+          <div id="latestMemoryHero" class="hidden relative rounded-2xl overflow-hidden border border-[var(--border-soft)] h-44 cursor-pointer">
             <img id="latestMemoryImg" src="" class="w-full h-full object-cover" alt="Latest">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 pointer-events-none">
               <span class="text-[10px] uppercase tracking-widest accent-text font-semibold">Latest Highlight</span>
               <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">—</p>
             </div>
@@ -561,6 +632,75 @@
           <span class="text-[10px] font-medium">Notes</span>
         </button>
       </nav>
+    </div>
+
+    <!-- ==================== FULL-SCREEN PHOTO VIEWER + SAVE MODAL ==================== -->
+    <div id="photoViewerModal" class="hidden absolute inset-0 bg-black/95 z-[55] flex flex-col justify-between p-4">
+      <div class="flex items-center justify-between pt-1">
+        <p id="photoViewerCaption" class="text-xs text-white/85 truncate max-w-[65%]">Photo</p>
+        <div class="flex items-center gap-2">
+          <button type="button" id="saveViewerPhotoBtn" class="px-3.5 py-1.5 rounded-full accent-bg text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
+            <i class="fa-solid fa-download text-[11px]"></i>
+            <span id="saveViewerPhotoLabel">Save</span>
+          </button>
+          <button type="button" id="closePhotoViewerBtn" class="w-8 h-8 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25 transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 flex items-center justify-center min-h-0 py-3">
+        <img id="photoViewerImg" src="" class="max-w-full max-h-full object-contain rounded-xl" alt="Full screen">
+      </div>
+
+      <p class="text-center text-[11px] text-white/50 pb-1">Tap Save to download photo</p>
+    </div>
+
+    <!-- ==================== EMOJI REACTION PICKER MODAL (FOR CHAT & NOTES) ==================== -->
+    <div id="emojiPickerModal" class="hidden absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-5">
+      <div class="surface-card w-full max-w-xs p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold text-[var(--text-main)]">Add Reaction</p>
+          <button onclick="document.getElementById('emojiPickerModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+
+        <div id="emojiPickerGrid" class="grid grid-cols-6 gap-1.5"></div>
+
+        <form id="customEmojiForm" class="flex gap-2 pt-2 border-t border-[var(--border-soft)]">
+          <input id="customEmojiInput" type="text" maxlength="4" placeholder="Or type any emoji..."
+            class="flex-1 bg-[var(--bg-elevated)] text-sm text-center text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-2 py-1.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+          <button type="submit" class="px-3 py-1.5 rounded-xl accent-bg text-xs font-semibold hover:opacity-90 transition">
+            Add
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== QUICK STATUS / VIBE MODAL ==================== -->
+    <div id="statusModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
+      <div class="surface-card w-full max-w-sm p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-editorial text-3xl text-[var(--text-main)]">Your Current Vibe</h3>
+            <p class="text-[11px] text-[var(--text-muted)]">Let your partner know your mood at a glance</p>
+          </div>
+          <button onclick="document.getElementById('statusModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div id="statusPresetGrid" class="grid grid-cols-2 gap-2"></div>
+
+        <form id="customStatusForm" class="flex gap-2 pt-2 border-t border-[var(--border-soft)]">
+          <input id="customStatusInput" type="text" maxlength="32" placeholder="Or type a custom vibe..."
+            class="flex-1 bg-[var(--bg-elevated)] text-xs text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3 py-2 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+          <button type="submit" class="px-3.5 py-2 rounded-xl accent-bg text-xs font-semibold hover:opacity-90 transition">
+            Set
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- ==================== IN-APP NOTIFICATIONS MODAL ==================== -->
@@ -619,7 +759,7 @@
 
     <!-- ==================== SPACE & THEME SETTINGS MODAL ==================== -->
     <div id="settingsModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
-      <div class="surface-card w-full max-w-sm p-5 space-y-4">
+      <div class="surface-card w-full max-w-sm max-h-[88vh] overflow-y-auto no-scrollbar p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-editorial text-3xl text-[var(--text-main)]">Space & Theme</h3>
           <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
@@ -664,8 +804,24 @@
         </div>
 
         <div>
-          <label class="block text-xs text-[var(--text-muted)] mb-1.5">Anniversary / Start Date</label>
+          <label class="block text-xs text-[var(--text-muted)] mb-1.5">Start Date / Anniversary</label>
           <input id="anniversaryInput" type="date" class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
+        </div>
+
+        <!-- Optional 4-Digit Privacy PIN Lock -->
+        <div class="surface-pill rounded-2xl p-3 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-xs font-semibold text-[var(--text-main)]">4-Digit Privacy PIN</p>
+            <p id="pinStatusSub" class="text-[11px] text-[var(--text-muted)]">Off — tap to set a passcode</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" id="setPinLockBtn" class="px-3 py-1.5 rounded-xl accent-soft-bg text-xs font-semibold hover:opacity-90 transition">
+              Set PIN
+            </button>
+            <button type="button" id="removePinLockBtn" class="hidden px-2.5 py-1.5 rounded-xl text-xs text-rose-400 hover:underline">
+              Off
+            </button>
+          </div>
         </div>
 
         <button id="saveSettingsBtn" class="w-full py-2.5 rounded-xl accent-bg font-semibold text-sm hover:opacity-90 transition">
@@ -711,6 +867,7 @@
 
     const LOCAL_MODE_KEY = "lereio_appearance_mode_v1";
     const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
+    const LOCAL_PIN_KEY = "lereio_privacy_pin_v1";
 
     const ACCENTS = {
       blue:    { dark: "#60a5fa", darkContrast: "#08111e", light: "#2563eb", lightContrast: "#ffffff", soft: "rgba(96, 165, 250, 0.14)", glow: "rgba(96, 165, 250, 0.11)" },
@@ -719,7 +876,29 @@
       amber:   { dark: "#fbbf24", darkContrast: "#1c1304", light: "#d97706", lightContrast: "#ffffff", soft: "rgba(251, 191, 36, 0.14)", glow: "rgba(251, 191, 36, 0.11)" }
     };
 
-    const REACTION_EMOJIS = ["♡", "🥰", "😂", "🥺", "🔥"];
+    const PICKER_EMOJIS = [
+      "♡", "🥰", "😂", "😄", "🥺", "🔥",
+      "😭", "😍", "🫶", "🤗", "😴", "✨",
+      "👏", "🤭", "😌", "💖", "🌸", "🍕"
+    ];
+
+    const STATUS_PRESETS = [
+      "🥺 Missing you",
+      "😴 Sleepy",
+      "🚗 On my way",
+      "📚 Busy / Studying",
+      "🍜 Eating",
+      "🥰 Thinking of you",
+      "🎧 Chilling",
+      "✨ Free to talk"
+    ];
+
+    const DEFAULT_WHISPERS = [
+      { id: "def_1", isDefault: true, tag: "Inside Whisper", text: '"Still our quiet little corner away from everyone else."' },
+      { id: "def_2", isDefault: true, tag: "Late Night Note", text: '"Pstt… tulog ka na ba o nag-scroll ka pa rin?"' },
+      { id: "def_3", isDefault: true, tag: "Milestone Check", text: '"Every monthsary is just proof we kept showing up."' },
+      { id: "def_4", isDefault: true, tag: "Us Only", text: '"Small moments, shared pins, and our own pace."' }
+    ];
 
     let currentUser = null;
     let activeRoomCode = "";
@@ -728,19 +907,172 @@
     let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
     let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
 
-    let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [] };
+    let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [], whispers: [] };
     let membersMap = {};
     let allMessages = [];
     let allMemories = [];
     let allPosts = [];
     let selectedAlbum = "All";
+    let whisperIndex = 0;
     let pendingAvatarBase64 = null;
+    let activeReactionTarget = null;
+    let activeViewerDataUrl = "";
     let unsubscribers = [];
 
     let leafletMap = null;
     let leafletTileLayer = null;
     let mapMarkersLayer = null;
 
+    // ==================== 4-DIGIT PRIVACY PIN LOCK ====================
+    let enteredPin = "";
+
+    function getSavedPin() {
+      return localStorage.getItem(LOCAL_PIN_KEY) || "";
+    }
+
+    function updatePinDots() {
+      const dots = document.querySelectorAll("#pinDotsRow .pin-dot");
+      dots.forEach((dot, idx) => {
+        if (idx < enteredPin.length) {
+          dot.classList.add("accent-bg");
+          dot.style.borderColor = "transparent";
+        } else {
+          dot.classList.remove("accent-bg");
+          dot.style.borderColor = "var(--text-muted)";
+        }
+      });
+    }
+
+    function checkAndShowPinLock() {
+      const saved = getSavedPin();
+      const overlay = document.getElementById("pinLockOverlay");
+      if (saved && saved.length === 4) {
+        enteredPin = "";
+        updatePinDots();
+        document.getElementById("pinLockHint").textContent = "Enter your 4-digit PIN to continue";
+        overlay.classList.remove("hidden");
+      } else {
+        overlay.classList.add("hidden");
+      }
+    }
+
+    function refreshPinSettingsUI() {
+      const saved = getSavedPin();
+      const sub = document.getElementById("pinStatusSub");
+      const setBtn = document.getElementById("setPinLockBtn");
+      const remBtn = document.getElementById("removePinLockBtn");
+      if (saved && saved.length === 4) {
+        sub.textContent = "Active — locks app when opened";
+        setBtn.textContent = "Change";
+        remBtn.classList.remove("hidden");
+      } else {
+        sub.textContent = "Off — tap to set a passcode";
+        setBtn.textContent = "Set PIN";
+        remBtn.classList.add("hidden");
+      }
+    }
+
+    document.querySelectorAll(".pin-key").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const saved = getSavedPin();
+        if (!saved || enteredPin.length >= 4) return;
+        enteredPin += btn.dataset.pinDigit;
+        updatePinDots();
+
+        if (enteredPin.length === 4) {
+          if (enteredPin === saved) {
+            setTimeout(() => {
+              document.getElementById("pinLockOverlay").classList.add("hidden");
+              enteredPin = "";
+              updatePinDots();
+            }, 120);
+          } else {
+            document.getElementById("pinLockHint").textContent = "Incorrect PIN — try again";
+            setTimeout(() => {
+              enteredPin = "";
+              updatePinDots();
+            }, 350);
+          }
+        }
+      });
+    });
+
+    document.getElementById("pinClearBtn").addEventListener("click", () => {
+      enteredPin = "";
+      updatePinDots();
+    });
+
+    document.getElementById("pinBackspaceBtn").addEventListener("click", () => {
+      enteredPin = enteredPin.slice(0, -1);
+      updatePinDots();
+    });
+
+    document.getElementById("setPinLockBtn").addEventListener("click", () => {
+      const pin = prompt("Enter a new 4-digit PIN (numbers only):");
+      if (pin === null) return;
+      const clean = pin.trim();
+      if (!/^\d{4}$/.test(clean)) {
+        alert("Please enter exactly 4 digits (for example: 1423).");
+        return;
+      }
+      localStorage.setItem(LOCAL_PIN_KEY, clean);
+      refreshPinSettingsUI();
+      alert("4-digit Privacy PIN enabled on this device.");
+    });
+
+    document.getElementById("removePinLockBtn").addEventListener("click", () => {
+      localStorage.removeItem(LOCAL_PIN_KEY);
+      refreshPinSettingsUI();
+    });
+
+    checkAndShowPinLock();
+
+    // ==================== FULL-SCREEN PHOTO VIEWER + SAVE ====================
+    function openPhotoViewer(dataUrl, caption = "Lereio Photo") {
+      if (!dataUrl) return;
+      activeViewerDataUrl = dataUrl;
+      document.getElementById("photoViewerImg").src = dataUrl;
+      document.getElementById("photoViewerCaption").textContent = caption || "Lereio Photo";
+      document.getElementById("saveViewerPhotoLabel").textContent = "Save";
+      document.getElementById("photoViewerModal").classList.remove("hidden");
+    }
+
+    document.getElementById("closePhotoViewerBtn").addEventListener("click", () => {
+      document.getElementById("photoViewerModal").classList.add("hidden");
+      activeViewerDataUrl = "";
+    });
+
+    document.getElementById("saveViewerPhotoBtn").addEventListener("click", async () => {
+      if (!activeViewerDataUrl) return;
+      const label = document.getElementById("saveViewerPhotoLabel");
+      const filename = `Lereio_${Date.now()}.jpg`;
+
+      try {
+        const link = document.createElement("a");
+        link.href = activeViewerDataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (navigator.share && navigator.canShare) {
+          const res = await fetch(activeViewerDataUrl);
+          const blob = await res.blob();
+          const file = new File([blob], filename, { type: "image/jpeg" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: "Lereio Photo" }).catch(() => {});
+          }
+        }
+
+        label.textContent = "Saved!";
+        setTimeout(() => { label.textContent = "Save"; }, 1800);
+      } catch (_) {
+        label.textContent = "Saved!";
+        setTimeout(() => { label.textContent = "Save"; }, 1800);
+      }
+    });
+
+    // ==================== APPEARANCE & HIGH-RES FIRESTORE IMAGE HELPER ====================
     function getLastSeenKey() {
       return `lereio_last_seen_${currentUser?.uid || "guest"}_${activeRoomCode || "none"}`;
     }
@@ -833,23 +1165,38 @@
       return div.innerHTML;
     }
 
-    function compressImage(file, maxWidth = 650, quality = 0.72) {
+    // Crisp High-Res helper that stays safely under Firestore's 1 MB document limit
+    function compressImage(file, maxWidth = 1360, quality = 0.85) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            const canvas = document.createElement("canvas");
-            let w = img.width;
-            let h = img.height;
-            if (w > maxWidth) {
-              h = Math.round((h * maxWidth) / w);
-              w = maxWidth;
+            const renderAt = (targetW, q) => {
+              const canvas = document.createElement("canvas");
+              let w = img.width;
+              let h = img.height;
+              if (w > targetW) {
+                h = Math.round((h * targetW) / w);
+                w = targetW;
+              }
+              canvas.width = w;
+              canvas.height = h;
+              canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+              return canvas.toDataURL("image/jpeg", q);
+            };
+
+            let currentW = maxWidth;
+            let currentQ = quality;
+            let dataUrl = renderAt(currentW, currentQ);
+
+            while (dataUrl.length > 880000 && currentQ > 0.55) {
+              currentQ -= 0.08;
+              if (currentW > 960) currentW = Math.round(currentW * 0.85);
+              dataUrl = renderAt(currentW, currentQ);
             }
-            canvas.width = w;
-            canvas.height = h;
-            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL("image/jpeg", quality));
+
+            resolve(dataUrl);
           };
           img.src = e.target.result;
         };
@@ -866,6 +1213,9 @@
       document.getElementById("settingsModal").classList.add("hidden");
       document.getElementById("profileModal").classList.add("hidden");
       document.getElementById("notificationsModal").classList.add("hidden");
+      document.getElementById("statusModal").classList.add("hidden");
+      document.getElementById("emojiPickerModal").classList.add("hidden");
+      document.getElementById("photoViewerModal").classList.add("hidden");
     }
 
     // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
@@ -988,6 +1338,7 @@
           startDate: "",
           theme: currentAccent,
           albums: ["All", "Moments", "Selfies", "Dates"],
+          whispers: [],
           memberUids: [currentUser.uid],
           createdAt: serverTimestamp()
         });
@@ -997,6 +1348,7 @@
           uid: currentUser.uid,
           name: fallbackName,
           photo: "",
+          status: "💭 Set vibe...",
           location: null
         });
 
@@ -1047,6 +1399,7 @@
           uid: currentUser.uid,
           name: fallbackName,
           photo: "",
+          status: "💭 Set vibe...",
           location: null
         });
       }
@@ -1111,6 +1464,7 @@
         if (snap.exists()) {
           spaceData = { ...spaceData, ...snap.data() };
           if (spaceData.theme) applyAppearance(currentMode, spaceData.theme);
+          renderWhisper();
           updateHomeCounters();
           renderMemories();
         }
@@ -1120,6 +1474,7 @@
         membersMap = {};
         snap.forEach((d) => { membersMap[d.id] = d.data(); });
         renderProfilesAndMap();
+        renderWhisper();
         renderNotifications();
       }));
 
@@ -1149,13 +1504,141 @@
     }
 
     function getMyProfile() {
-      return membersMap[currentUser?.uid] || { name: "", photo: "", location: null };
+      return membersMap[currentUser?.uid] || { name: "", photo: "", status: "", location: null };
     }
 
     function getPartnerProfile() {
       const partnerId = Object.keys(membersMap).find((id) => id !== currentUser?.uid);
       return partnerId ? membersMap[partnerId] : null;
     }
+
+    // ==================== QUICK "THINKING OF YOU" STATUS ====================
+    async function saveMyStatus(statusText) {
+      if (!activeRoomCode || !currentUser) return;
+      const clean = (statusText || "").trim();
+      if (!clean) return;
+      await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+        status: clean,
+        statusUpdatedAt: Date.now()
+      });
+      document.getElementById("statusModal").classList.add("hidden");
+    }
+
+    document.getElementById("openMyStatusBtn").addEventListener("click", () => {
+      const me = getMyProfile();
+      const grid = document.getElementById("statusPresetGrid");
+      grid.innerHTML = STATUS_PRESETS.map((preset) => {
+        const active = me.status === preset;
+        return `
+          <button type="button" data-status-val="${escapeHtml(preset)}"
+            class="status-preset-btn py-2.5 px-3 rounded-xl surface-pill text-xs text-left font-medium transition ${active ? "border border-[var(--accent)] accent-text font-semibold" : "text-[var(--text-main)]"}">
+            ${escapeHtml(preset)}
+          </button>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".status-preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => saveMyStatus(btn.dataset.statusVal));
+      });
+
+      document.getElementById("customStatusInput").value = "";
+      document.getElementById("statusModal").classList.remove("hidden");
+    });
+
+    document.getElementById("customStatusForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const val = document.getElementById("customStatusInput").value.trim();
+      if (!val) return;
+      await saveMyStatus(val);
+    });
+
+    // ==================== ROTATING WHISPERS & INSIDE NOTES ====================
+    function getWhispersList() {
+      const rawCustom = Array.isArray(spaceData.whispers) ? spaceData.whispers : [];
+      const pinned = rawCustom.filter((w) => w.pinned);
+      const unpinned = rawCustom.filter((w) => !w.pinned);
+      return [...pinned, ...unpinned, ...DEFAULT_WHISPERS];
+    }
+
+    function renderWhisper() {
+      const list = getWhispersList();
+      if (list.length === 0) return;
+      whisperIndex = whisperIndex % list.length;
+      const item = list[whisperIndex];
+
+      const tagPrefix = item.pinned ? "★ Pinned · " : "";
+      document.getElementById("whisperTagLabel").textContent = tagPrefix + (item.tag || "Inside Whisper");
+      document.getElementById("dailyWhisperText").textContent = item.text;
+
+      const pinBtn = document.getElementById("pinWhisperBtn");
+      const pinIcon = document.getElementById("pinWhisperIcon");
+      const delBtn = document.getElementById("deleteWhisperBtn");
+
+      if (!item.isDefault) {
+        pinBtn.classList.remove("hidden");
+        delBtn.classList.remove("hidden");
+        if (item.pinned) {
+          pinIcon.className = "fa-solid fa-star text-[10px] accent-text";
+        } else {
+          pinIcon.className = "fa-regular fa-star text-[10px]";
+        }
+      } else {
+        pinBtn.classList.add("hidden");
+        delBtn.classList.add("hidden");
+      }
+    }
+
+    document.getElementById("cycleWhisperBtn").addEventListener("click", () => {
+      const list = getWhispersList();
+      if (list.length === 0) return;
+      whisperIndex = (whisperIndex + 1) % list.length;
+      renderWhisper();
+    });
+
+    document.getElementById("addCustomWhisperBtn").addEventListener("click", async () => {
+      if (!activeRoomCode || !currentUser) return;
+      const note = prompt("Write an inside joke or whisper for the two of you:");
+      if (!note || !note.trim()) return;
+      const newEntry = {
+        id: `w_${Date.now()}`,
+        pinned: false,
+        tag: "Inside Note",
+        text: `"${note.trim()}"`
+      };
+      const updated = [newEntry, ...(Array.isArray(spaceData.whispers) ? spaceData.whispers : [])];
+      await updateDoc(doc(db, "rooms", activeRoomCode), { whispers: updated });
+      whisperIndex = 0;
+      renderWhisper();
+    });
+
+    document.getElementById("pinWhisperBtn").addEventListener("click", async () => {
+      const list = getWhispersList();
+      const currentItem = list[whisperIndex];
+      if (!currentItem || currentItem.isDefault) return;
+
+      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).map((w) => {
+        if ((w.id && w.id === currentItem.id) || w.text === currentItem.text) {
+          return { ...w, pinned: !w.pinned };
+        }
+        return w;
+      });
+      await updateDoc(doc(db, "rooms", activeRoomCode), { whispers: updated });
+      whisperIndex = 0;
+    });
+
+    document.getElementById("deleteWhisperBtn").addEventListener("click", async () => {
+      const list = getWhispersList();
+      const currentItem = list[whisperIndex];
+      if (!currentItem || currentItem.isDefault) return;
+      if (!confirm("Remove this saved inside note?")) return;
+
+      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).filter((w) => {
+        if (currentItem.id && w.id) return w.id !== currentItem.id;
+        return w.text !== currentItem.text;
+      });
+      await updateDoc(doc(db, "rooms", activeRoomCode), { whispers: updated });
+      whisperIndex = 0;
+    });
 
     // ==================== IN-APP NOTIFICATIONS ====================
     function buildActivityItems() {
@@ -1401,6 +1884,11 @@
       document.getElementById("myDisplayNameHero").textContent = me.name || "You";
       document.getElementById("partnerDisplayNameHero").textContent = partner?.name || "Partner";
 
+      document.getElementById("myStatusOwnerLabel").textContent = `${me.name || "Your"} vibe`;
+      document.getElementById("myStatusText").textContent = me.status || "💭 Set vibe...";
+      document.getElementById("partnerStatusOwnerLabel").textContent = `${partner?.name || "Partner"}'s vibe`;
+      document.getElementById("partnerStatusText").textContent = partner?.status || "♡ Quietly here";
+
       const myWrap = document.getElementById("heroMyAvatarWrap");
       myWrap.innerHTML = me.photo
         ? `<img src="${me.photo}" class="w-full h-full object-cover">`
@@ -1413,7 +1901,7 @@
       if (partner) {
         inviteBanner.classList.add("hidden");
         document.getElementById("chatPartnerName").textContent = partner.name || "Partner";
-        document.getElementById("chatPartnerSub").textContent = "Connected in Lereio";
+        document.getElementById("chatPartnerSub").textContent = partner.status || "Connected in Lereio";
         document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
         const pHtml = partner.photo
           ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
@@ -1531,7 +2019,7 @@
       }
     });
 
-    // ==================== HOME DAY COUNTER & REFRESH ====================
+    // ==================== HOME START DATE, MONTHSARY & ANNIVERSARY ====================
     function updateHomeCounters() {
       const now = new Date();
       const hour = now.getHours();
@@ -1554,6 +2042,9 @@
       document.getElementById("counterUnsetView").classList.add("hidden");
 
       const start = new Date(spaceData.startDate + "T00:00:00");
+      document.getElementById("startDateBadgeText").textContent =
+        `Started ${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+
       const diffMs = Math.max(0, now - start);
       const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const weeks = Math.floor(totalDays / 7);
@@ -1573,14 +2064,14 @@
       if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
       const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
       document.getElementById("anniversaryCountdown").textContent =
-        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} days`;
+        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} ${daysToAnniv === 1 ? "day" : "days"}`;
 
       let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
       if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
       const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
-      const nextMonthNum = months + 1;
+      document.getElementById("monthsaryLabel").textContent = `Monthsary #${months + 1}`;
       document.getElementById("monthsaryCountdown").textContent =
-        daysToMonth === 0 ? `Today! ♡` : `In ${daysToMonth} days`;
+        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} ${daysToMonth === 1 ? "day" : "days"}`;
     }
 
     function triggerHomeRefresh() {
@@ -1597,6 +2088,7 @@
 
       updateHomeCounters();
       renderProfilesAndMap();
+      renderWhisper();
       renderNotifications();
       if (activeRoomCode) {
         startRoomListeners(activeRoomCode);
@@ -1612,7 +2104,6 @@
 
     document.getElementById("homeRefreshBtn").addEventListener("click", triggerHomeRefresh);
 
-    // Pull-down gesture on Home tab
     const homeSec = document.getElementById("tab-home");
     let pullStartY = 0;
     let isPulling = false;
@@ -1668,7 +2159,7 @@
     document.getElementById("profilePhotoInput").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      pendingAvatarBase64 = await compressImage(file, 320, 0.78);
+      pendingAvatarBase64 = await compressImage(file, 400, 0.82);
       document.getElementById("modalAvatarPreview").innerHTML =
         `<img src="${pendingAvatarBase64}" class="w-full h-full object-cover">`;
     });
@@ -1686,6 +2177,7 @@
     document.getElementById("openSettingsBtn").addEventListener("click", () => {
       document.getElementById("anniversaryInput").value = spaceData.startDate || "";
       applyAppearance(currentMode, currentAccent);
+      refreshPinSettingsUI();
       document.getElementById("settingsModal").classList.remove("hidden");
     });
 
@@ -1739,7 +2231,78 @@
       btn.addEventListener("click", () => switchTab(btn.dataset.tab));
     });
 
-    // ==================== CHAT (SEND, EDIT, DELETE) ====================
+    // ==================== SHARED EMOJI REACTION ENGINE (CHAT + NOTES) ====================
+    async function toggleTargetReaction(collectionName, docId, emoji) {
+      const sourceList = collectionName === "messages" ? allMessages : allPosts;
+      const item = sourceList.find((x) => x.id === docId);
+      if (!item || !emoji) return;
+
+      const currentReactions = { ...(item.reactions || {}) };
+      const listForEmoji = Array.isArray(currentReactions[emoji]) ? [...currentReactions[emoji]] : [];
+      if (listForEmoji.includes(currentUser.uid)) {
+        currentReactions[emoji] = listForEmoji.filter((id) => id !== currentUser.uid);
+      } else {
+        currentReactions[emoji] = [...listForEmoji, currentUser.uid];
+      }
+
+      await updateDoc(doc(db, "rooms", activeRoomCode, collectionName, docId), {
+        reactions: currentReactions
+      });
+    }
+
+    function openEmojiPicker(collectionName, docId) {
+      activeReactionTarget = { collection: collectionName, id: docId };
+      const grid = document.getElementById("emojiPickerGrid");
+      grid.innerHTML = PICKER_EMOJIS.map((emoji) => `
+        <button type="button" data-pick-emoji="${emoji}"
+          class="pick-emoji-btn h-10 rounded-xl surface-pill text-lg flex items-center justify-center hover:border-[var(--accent)] transition">
+          ${emoji}
+        </button>
+      `).join("");
+
+      grid.querySelectorAll(".pick-emoji-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const chosen = btn.dataset.pickEmoji;
+          document.getElementById("emojiPickerModal").classList.add("hidden");
+          if (activeReactionTarget) {
+            await toggleTargetReaction(activeReactionTarget.collection, activeReactionTarget.id, chosen);
+          }
+        });
+      });
+
+      document.getElementById("customEmojiInput").value = "";
+      document.getElementById("emojiPickerModal").classList.remove("hidden");
+    }
+
+    document.getElementById("customEmojiForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const val = document.getElementById("customEmojiInput").value.trim();
+      if (!val || !activeReactionTarget) return;
+      document.getElementById("emojiPickerModal").classList.add("hidden");
+      await toggleTargetReaction(activeReactionTarget.collection, activeReactionTarget.id, val);
+    });
+
+    function buildChatReactionBadges(msg) {
+      const reactions = msg.reactions || {};
+      const entries = Object.entries(reactions).filter(([, uids]) => Array.isArray(uids) && uids.length > 0);
+      if (entries.length === 0) return "";
+      return `
+        <div class="flex items-center gap-1 flex-wrap mt-1">
+          ${entries.map(([emoji, uids]) => {
+            const active = uids.includes(currentUser.uid);
+            return `
+              <button type="button" data-react-msg="${msg.id}" data-emoji="${escapeHtml(emoji)}"
+                class="react-msg-btn flex items-center gap-0.5 px-2 py-0.5 rounded-full surface-pill text-[11px] ${active ? "border border-[var(--accent)] accent-soft-bg font-semibold" : "text-[var(--text-main)]"}">
+                <span>${escapeHtml(emoji)}</span>
+                ${uids.length > 1 ? `<span class="text-[10px]">${uids.length}</span>` : ""}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    // ==================== CHAT (SEND, REACT, FULLSCREEN PHOTO, EDIT, DELETE) ====================
     function renderChat(messages) {
       const container = document.getElementById("chatMessagesContainer");
       if (messages.length === 0) {
@@ -1760,14 +2323,22 @@
           ? msg.createdAt.toDate().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
           : "Sending...";
         const editedLabel = msg.edited ? ` · edited` : "";
+        const badgesHtml = buildChatReactionBadges(msg);
 
         if (isMe) {
           return `
             <div class="flex flex-col items-end group">
-              ${msg.image
-                ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
-                : `<div class="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm accent-bg text-sm font-medium">${escapeHtml(msg.text)}</div>`
-              }
+              <div class="flex items-center gap-1.5 max-w-[86%]">
+                <button type="button" data-open-msg-picker="${msg.id}" title="React"
+                  class="open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
+                  <i class="fa-regular fa-face-smile"></i>
+                </button>
+                ${msg.image
+                  ? `<img src="${msg.image}" data-view-msg-img="${msg.id}" class="view-msg-img-btn max-w-[215px] rounded-2xl border border-[var(--border-soft)] cursor-pointer">`
+                  : `<div class="px-4 py-2.5 rounded-2xl rounded-br-sm accent-bg text-sm font-medium break-words">${escapeHtml(msg.text)}</div>`
+                }
+              </div>
+              ${badgesHtml}
               <div class="flex items-center gap-2 mt-1 pr-1">
                 ${!msg.image ? `
                   <button type="button" data-edit-msg="${msg.id}" class="edit-msg-btn text-[10px] text-[var(--text-muted)] hover:accent-text" title="Edit message">
@@ -1788,17 +2359,43 @@
           return `
             <div class="flex items-end gap-2">
               ${avatarHtml}
-              <div class="flex flex-col items-start">
-                ${msg.image
-                  ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
-                  : `<div class="max-w-[240px] px-4 py-2.5 rounded-2xl rounded-bl-sm surface-card text-[var(--text-main)] text-sm">${escapeHtml(msg.text)}</div>`
-                }
+              <div class="flex flex-col items-start max-w-[82%]">
+                <div class="flex items-center gap-1.5">
+                  ${msg.image
+                    ? `<img src="${msg.image}" data-view-msg-img="${msg.id}" class="view-msg-img-btn max-w-[215px] rounded-2xl border border-[var(--border-soft)] cursor-pointer">`
+                    : `<div class="px-4 py-2.5 rounded-2xl rounded-bl-sm surface-card text-[var(--text-main)] text-sm break-words">${escapeHtml(msg.text)}</div>`
+                  }
+                  <button type="button" data-open-msg-picker="${msg.id}" title="React"
+                    class="open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
+                    <i class="fa-regular fa-face-smile"></i>
+                  </button>
+                </div>
+                ${badgesHtml}
                 <span class="text-[10px] text-[var(--text-muted)] mt-1 pl-1">${timeStr}${editedLabel}</span>
               </div>
             </div>
           `;
         }
       }).join("");
+
+      container.querySelectorAll(".open-msg-picker-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          openEmojiPicker("messages", btn.dataset.openMsgPicker);
+        });
+      });
+
+      container.querySelectorAll(".react-msg-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await toggleTargetReaction("messages", btn.dataset.reactMsg, btn.dataset.emoji);
+        });
+      });
+
+      container.querySelectorAll(".view-msg-img-btn").forEach((imgEl) => {
+        imgEl.addEventListener("click", () => {
+          const msg = messages.find((m) => m.id === imgEl.dataset.viewMsgImg);
+          if (msg?.image) openPhotoViewer(msg.image, "Chat Photo");
+        });
+      });
 
       container.querySelectorAll(".edit-msg-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -1834,6 +2431,7 @@
       await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
         senderUid: currentUser.uid,
         text,
+        reactions: {},
         createdAt: serverTimestamp()
       });
     });
@@ -1841,15 +2439,17 @@
     document.getElementById("chatImageInput").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const base64 = await compressImage(file, 650, 0.72);
+      const base64 = await compressImage(file, 1360, 0.85);
       await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
         senderUid: currentUser.uid,
         image: base64,
+        reactions: {},
         createdAt: serverTimestamp()
       });
+      e.target.value = "";
     });
 
-    // ==================== GALLERY (UPLOAD & DELETE) ====================
+    // ==================== GALLERY (UPLOAD, FULLSCREEN VIEW + SAVE, DELETE) ====================
     function renderMemories() {
       const albums = spaceData.albums || ["All", "Moments", "Selfies", "Dates"];
       const filterBar = document.getElementById("albumFilterBar");
@@ -1879,8 +2479,10 @@
         heroCard.classList.remove("hidden");
         document.getElementById("latestMemoryImg").src = allMemories[0].url;
         document.getElementById("latestMemoryCaption").textContent = allMemories[0].caption;
+        heroCard.onclick = () => openPhotoViewer(allMemories[0].url, allMemories[0].caption);
       } else {
         heroCard.classList.add("hidden");
+        heroCard.onclick = null;
       }
 
       const filtered = selectedAlbum === "All"
@@ -1905,13 +2507,20 @@
             class="del-mem-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/65 text-white hover:text-rose-400 flex items-center justify-center text-xs transition">
             <i class="fa-regular fa-trash-can"></i>
           </button>
-          <img src="${item.url}" class="w-full h-36 object-cover">
+          <img src="${item.url}" data-view-mem="${item.id}" class="view-mem-btn w-full h-36 object-cover cursor-pointer">
           <div class="p-2.5">
             <p class="text-xs text-[var(--text-main)] truncate">${escapeHtml(item.caption)}</p>
             <p class="text-[10px] text-[var(--text-muted)] mt-0.5">${escapeHtml(item.album)}</p>
           </div>
         </div>
       `).join("");
+
+      grid.querySelectorAll(".view-mem-btn").forEach((imgEl) => {
+        imgEl.addEventListener("click", () => {
+          const item = filtered.find((m) => m.id === imgEl.dataset.viewMem);
+          if (item?.url) openPhotoViewer(item.url, item.caption);
+        });
+      });
 
       grid.querySelectorAll(".del-mem-btn").forEach((btn) => {
         btn.addEventListener("click", async (e) => {
@@ -1937,7 +2546,7 @@
       if (!file) return;
       const caption = prompt("Add a short caption:", "") || "Captured moment";
       const album = selectedAlbum === "All" ? "Moments" : selectedAlbum;
-      const url = await compressImage(file, 700, 0.75);
+      const url = await compressImage(file, 1360, 0.85);
 
       await addDoc(collection(db, "rooms", activeRoomCode, "memories"), {
         album,
@@ -1946,9 +2555,10 @@
         uploadedBy: currentUser.uid,
         createdAt: serverTimestamp()
       });
+      e.target.value = "";
     });
 
-    // ==================== NOTES / WALL (MULTI-EMOJI REACTIONS) ====================
+    // ==================== NOTES / WALL (COMPACT REACTIONS + EMOJI PICKER) ====================
     function renderFeed(posts) {
       const list = document.getElementById("feedPostsList");
       if (posts.length === 0) {
@@ -1972,17 +2582,21 @@
           ? `<img src="${authorProf.photo}" class="w-7 h-7 rounded-full object-cover">`
           : `<div class="w-7 h-7 rounded-full surface-pill accent-text flex items-center justify-center font-bold text-xs">${escapeHtml((authorProf.name || "?")[0].toUpperCase())}</div>`;
 
-        const reactionButtonsHtml = REACTION_EMOJIS.map((emoji) => {
-          const uids = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
-          const active = uids.includes(currentUser.uid);
-          return `
-            <button type="button" data-react-post="${post.id}" data-emoji="${emoji}"
-              class="react-post-btn flex items-center gap-1 px-2 py-1 rounded-full surface-pill text-xs transition ${active ? "border border-[var(--accent)] accent-text font-semibold" : "text-[var(--text-muted)]"}">
-              <span>${emoji}</span>
-              ${uids.length > 0 ? `<span class="text-[10px]">${uids.length}</span>` : ""}
-            </button>
-          `;
-        }).join("");
+        const heartUids = Array.isArray(reactions["♡"]) ? reactions["♡"] : [];
+        const heartActive = heartUids.includes(currentUser.uid);
+
+        const activeEmojiPills = Object.entries(reactions)
+          .filter(([emoji, uids]) => emoji !== "♡" && Array.isArray(uids) && uids.length > 0)
+          .map(([emoji, uids]) => {
+            const active = uids.includes(currentUser.uid);
+            return `
+              <button type="button" data-react-post="${post.id}" data-emoji="${escapeHtml(emoji)}"
+                class="react-post-btn flex items-center gap-1 px-2.5 py-1 rounded-full surface-pill text-xs transition ${active ? "border border-[var(--accent)] accent-soft-bg font-semibold" : "text-[var(--text-main)]"}">
+                <span>${escapeHtml(emoji)}</span>
+                <span class="text-[11px]">${uids.length}</span>
+              </button>
+            `;
+          }).join("");
 
         return `
           <div class="surface-card p-4 border-l-2 border-l-[var(--accent)] space-y-2.5">
@@ -2001,7 +2615,17 @@
 
             <div class="flex items-center justify-between gap-2 pt-2 border-t border-[var(--border-soft)] text-xs text-[var(--text-muted)]">
               <div class="flex items-center gap-1.5 flex-wrap">
-                ${reactionButtonsHtml}
+                <button type="button" data-react-post="${post.id}" data-emoji="♡"
+                  class="react-post-btn flex items-center gap-1 px-2.5 py-1 rounded-full surface-pill text-xs transition ${heartActive ? "border border-[var(--accent)] accent-soft-bg font-semibold" : "text-[var(--text-muted)]"}">
+                  <span>♡</span>
+                  ${heartUids.length > 0 ? `<span class="text-[11px]">${heartUids.length}</span>` : ""}
+                </button>
+                ${activeEmojiPills}
+                <button type="button" data-open-picker="${post.id}" title="Add reaction"
+                  class="open-picker-btn flex items-center gap-1 px-2.5 py-1 rounded-full surface-pill text-xs text-[var(--text-muted)] hover:accent-text transition">
+                  <i class="fa-regular fa-face-smile"></i>
+                  <span class="text-[11px] font-semibold">+</span>
+                </button>
               </div>
               <button data-comment="${post.id}" class="comment-post-btn flex items-center gap-1.5 hover:text-[var(--text-main)] shrink-0">
                 <i class="fa-regular fa-comment"></i>
@@ -2020,22 +2644,13 @@
 
       list.querySelectorAll(".react-post-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const postId = btn.dataset.reactPost;
-          const emoji = btn.dataset.emoji;
-          const post = posts.find((p) => p.id === postId);
-          if (!post) return;
+          await toggleTargetReaction("posts", btn.dataset.reactPost, btn.dataset.emoji);
+        });
+      });
 
-          const currentReactions = { ...(post.reactions || {}) };
-          const listForEmoji = Array.isArray(currentReactions[emoji]) ? [...currentReactions[emoji]] : [];
-          if (listForEmoji.includes(currentUser.uid)) {
-            currentReactions[emoji] = listForEmoji.filter((id) => id !== currentUser.uid);
-          } else {
-            currentReactions[emoji] = [...listForEmoji, currentUser.uid];
-          }
-
-          await updateDoc(doc(db, "rooms", activeRoomCode, "posts", postId), {
-            reactions: currentReactions
-          });
+      list.querySelectorAll(".open-picker-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          openEmojiPicker("posts", btn.dataset.openPicker);
         });
       });
 
