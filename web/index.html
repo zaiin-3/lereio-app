@@ -13,12 +13,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
-      /* Default: Dark Mode + Midnight Blue */
       --bg-outer: #07090e;
       --bg-base: #0c1018;
       --bg-card: #131926;
       --bg-elevated: #1b2436;
-      --nav-bg: rgba(19, 25, 38, 0.94);
+      --nav-bg: rgba(19, 25, 38, 0.96);
       --accent: #60a5fa;
       --accent-contrast: #08111e;
       --accent-soft: rgba(96, 165, 250, 0.14);
@@ -26,6 +25,7 @@
       --text-main: #f1f5f9;
       --text-muted: #8b9bb4;
       --border-soft: rgba(148, 163, 184, 0.14);
+      --bottom-nav-height: 58px;
     }
 
     * {
@@ -33,8 +33,13 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
       background-color: var(--bg-outer);
       color: var(--text-main);
       font-family: 'Inter', sans-serif;
@@ -52,7 +57,7 @@
     .app-shell {
       width: 100%;
       max-width: 430px;
-      height: 100vh;
+      height: 100dvh;
       max-height: 920px;
       background-color: var(--bg-base);
       background-image:
@@ -107,6 +112,38 @@
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+
+    #tab-chat {
+      position: relative;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #tab-chat.active-chat {
+      display: flex;
+    }
+
+    #chatMessagesContainer {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 20px 14px 20px;
+    }
+
+    #chatForm {
+      flex: 0 0 auto;
+      width: 100%;
+      margin: 0;
+      padding: 10px 14px calc(10px + var(--bottom-nav-height)) 14px;
+      background-color: var(--bg-card);
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
     }
 
     #miniMapContainer {
@@ -164,7 +201,6 @@
           </p>
         </div>
 
-        <!-- Mode Toggle: Sign In vs Create Account -->
         <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl surface-pill">
           <button type="button" id="modeLoginTab" class="py-2 rounded-xl text-xs font-semibold accent-bg transition">
             Sign In
@@ -219,7 +255,6 @@
           </p>
         </div>
 
-        <!-- Option A: Generate Invite Code -->
         <div class="surface-card p-4 space-y-3 text-left">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl accent-soft-bg flex items-center justify-center">
@@ -242,7 +277,6 @@
           <div class="h-px flex-1 bg-[var(--border-soft)]"></div>
         </div>
 
-        <!-- Option B: Join Partner's Code -->
         <form id="joinSpaceForm" class="surface-card p-4 space-y-3 text-left">
           <label class="block text-xs font-semibold text-[var(--text-main)]">Enter Partner's Code</label>
           <div class="flex gap-2">
@@ -260,21 +294,27 @@
     </div>
 
     <!-- ==================== 3. MAIN APP SHELL ==================== -->
-    <div id="mainApp" class="hidden flex-1 flex flex-col overflow-hidden">
+    <div id="mainApp" class="hidden flex-1 flex flex-col min-h-0 overflow-hidden">
 
-      <!-- Clean Top Header -->
-      <header class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0">
+      <!-- Clean Top Header with Notification Bell, Profile & Settings -->
+      <header class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0 z-20 bg-[var(--bg-base)]/90 backdrop-blur-sm">
         <div class="flex items-center gap-2">
           <span class="w-2 h-2 rounded-full accent-bg"></span>
           <span class="font-editorial text-2xl tracking-wide text-[var(--text-main)]">Lereio</span>
         </div>
 
-        <div class="flex items-center gap-2">
-          <button id="openProfileBtn" class="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
+        <div class="flex items-center gap-1.5">
+          <button id="openProfileBtn" class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
             <img id="headerMyAvatar" src="" class="w-6 h-6 rounded-full object-cover hidden" alt="Me">
             <div id="headerMyInitial" class="w-6 h-6 rounded-full accent-soft-bg text-[11px] font-bold flex items-center justify-center">?</div>
-            <span id="headerMyName" class="text-xs text-[var(--text-main)] font-medium max-w-[85px] truncate">Set Name</span>
+            <span id="headerMyName" class="text-xs text-[var(--text-main)] font-medium max-w-[76px] truncate">Set Name</span>
             <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
+          </button>
+
+          <!-- In-App Notification Bell -->
+          <button id="openNotificationsBtn" class="relative w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Activity & Notifications">
+            <i class="fa-regular fa-bell text-xs accent-text"></i>
+            <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full accent-bg text-[9px] font-bold flex items-center justify-center">0</span>
           </button>
 
           <button id="openSettingsBtn" class="w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Space & Theme Settings">
@@ -283,15 +323,26 @@
         </div>
       </header>
 
-      <!-- Main Scrollable Content Area -->
-      <main class="flex-1 overflow-y-auto no-scrollbar pb-24">
+      <!-- Main Content Area -->
+      <main class="flex-1 min-h-0 flex flex-col overflow-hidden">
 
         <!-- ==================== TAB 1: HOME / OVERVIEW ==================== -->
-        <section id="tab-home" class="p-5 space-y-4">
+        <section id="tab-home" class="flex-1 overflow-y-auto no-scrollbar p-5 pb-24 space-y-4">
+
+          <!-- Pull-to-Refresh Indicator -->
+          <div id="pullRefreshIndicator" class="hidden items-center justify-center gap-2 text-xs accent-text py-1">
+            <i id="pullRefreshIcon" class="fa-solid fa-rotate text-xs"></i>
+            <span id="pullRefreshLabel">Pull down to refresh</span>
+          </div>
 
           <div class="surface-card p-4 flex items-center justify-between">
             <div class="space-y-0.5">
-              <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
+              <div class="flex items-center gap-2">
+                <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
+                <button type="button" id="homeRefreshBtn" class="text-[11px] text-[var(--text-muted)] hover:accent-text transition" title="Refresh Home">
+                  <i id="homeRefreshIcon" class="fa-solid fa-rotate-right"></i>
+                </button>
+              </div>
               <h1 class="font-editorial text-3xl text-[var(--text-main)]">
                 <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
               </h1>
@@ -308,7 +359,6 @@
             </div>
           </div>
 
-          <!-- Invite Code Banner -->
           <div id="inviteBannerCard" class="surface-card p-4 flex items-center justify-between border border-dashed border-[var(--accent)]/50">
             <div>
               <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Waiting for Partner</p>
@@ -321,7 +371,6 @@
             </button>
           </div>
 
-          <!-- Live Interactive Mini-Map & Distance Card -->
           <div class="surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -363,7 +412,6 @@
             </div>
           </div>
 
-          <!-- Circular Milestone Ring Card -->
           <div class="surface-card p-6 flex flex-col items-center text-center">
             <div id="counterConfiguredView" class="w-full flex flex-col items-center">
               <div class="relative w-40 h-40 flex items-center justify-center my-1">
@@ -416,8 +464,8 @@
         </section>
 
         <!-- ==================== TAB 2: DIRECT CHAT ==================== -->
-        <section id="tab-chat" class="hidden h-full flex flex-col">
-          <div class="px-5 py-3 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
+        <section id="tab-chat" class="hidden">
+          <div class="px-5 py-2.5 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
               <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
               <div>
@@ -428,9 +476,9 @@
             <span id="chatRoomBadge" class="text-[10px] px-2.5 py-1 rounded-full accent-soft-bg font-semibold">LRO-000</span>
           </div>
 
-          <div id="chatMessagesContainer" class="flex-1 overflow-y-auto no-scrollbar px-5 py-3 space-y-3"></div>
+          <div id="chatMessagesContainer" class="no-scrollbar space-y-3"></div>
 
-          <form id="chatForm" class="p-3 bg-[var(--bg-card)] border-t border-[var(--border-soft)] flex items-center gap-2 shrink-0">
+          <form id="chatForm">
             <label class="w-9 h-9 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer shrink-0">
               <i class="fa-regular fa-image text-sm"></i>
               <input id="chatImageInput" type="file" accept="image/*" class="hidden">
@@ -444,7 +492,7 @@
         </section>
 
         <!-- ==================== TAB 3: SHARED GALLERY ==================== -->
-        <section id="tab-memories" class="hidden p-5 space-y-4">
+        <section id="tab-memories" class="hidden flex-1 overflow-y-auto no-scrollbar p-5 pb-24 space-y-4">
           <div class="flex items-center justify-between">
             <div>
               <h2 class="font-editorial text-3xl text-[var(--text-main)]">Shared Gallery</h2>
@@ -475,7 +523,7 @@
         </section>
 
         <!-- ==================== TAB 4: SHARED NOTES / WALL ==================== -->
-        <section id="tab-feed" class="hidden p-5 space-y-4">
+        <section id="tab-feed" class="hidden flex-1 overflow-y-auto no-scrollbar p-5 pb-24 space-y-4">
           <div class="surface-card p-4 space-y-3">
             <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
               class="w-full bg-transparent text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] resize-none focus:outline-none"></textarea>
@@ -495,12 +543,12 @@
       </main>
 
       <!-- Bottom Icon Navigation Bar -->
-      <nav style="background-color: var(--nav-bg);" class="absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 py-2.5 flex items-center justify-between z-20">
+      <nav style="background-color: var(--nav-bg); height: var(--bottom-nav-height);" class="fixed md:absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 flex items-center justify-between z-30">
         <button data-tab="home" class="nav-btn flex flex-col items-center gap-1 accent-text">
           <i class="fa-solid fa-house text-base"></i>
           <span class="text-[10px] font-medium">Home</span>
         </button>
-        <button data-tab="chat" class="nav-btn flex flex-col items-center gap-1 text-[var(--text-muted)]">
+        <button data-tab="chat" class="nav-btn relative flex flex-col items-center gap-1 text-[var(--text-muted)]">
           <i class="fa-regular fa-comment-dots text-base"></i>
           <span class="text-[10px] font-medium">Chat</span>
         </button>
@@ -513,6 +561,27 @@
           <span class="text-[10px] font-medium">Notes</span>
         </button>
       </nav>
+    </div>
+
+    <!-- ==================== IN-APP NOTIFICATIONS MODAL ==================== -->
+    <div id="notificationsModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
+      <div class="surface-card w-full max-w-sm max-h-[78vh] flex flex-col p-5 space-y-3">
+        <div class="flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="font-editorial text-3xl text-[var(--text-main)]">Activity</h3>
+            <p class="text-[11px] text-[var(--text-muted)]">Recent updates in your shared space</p>
+          </div>
+          <button id="closeNotificationsBtn" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div id="notificationsList" class="flex-1 overflow-y-auto no-scrollbar space-y-2 py-1"></div>
+
+        <button id="markAllReadBtn" class="w-full py-2 rounded-xl surface-pill text-xs font-semibold accent-text hover:opacity-90 transition shrink-0">
+          Mark All as Read
+        </button>
+      </div>
     </div>
 
     <!-- ==================== PROFILE EDIT MODAL ==================== -->
@@ -615,7 +684,7 @@
 
   </div>
 
-  <!-- ==================== FIREBASE EMAIL/PASSWORD + FIRESTORE SYNC ==================== -->
+  <!-- ==================== FIREBASE EMAIL/PASSWORD + FIRESTORE + CAPACITOR ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
@@ -650,15 +719,20 @@
       amber:   { dark: "#fbbf24", darkContrast: "#1c1304", light: "#d97706", lightContrast: "#ffffff", soft: "rgba(251, 191, 36, 0.14)", glow: "rgba(251, 191, 36, 0.11)" }
     };
 
+    const REACTION_EMOJIS = ["♡", "🥰", "😂", "🥺", "🔥"];
+
     let currentUser = null;
     let activeRoomCode = "";
-    let authMode = "login"; // 'login' or 'signup'
+    let activeTab = "home";
+    let authMode = "login";
     let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
     let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
 
     let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [] };
     let membersMap = {};
+    let allMessages = [];
     let allMemories = [];
+    let allPosts = [];
     let selectedAlbum = "All";
     let pendingAvatarBase64 = null;
     let unsubscribers = [];
@@ -666,6 +740,25 @@
     let leafletMap = null;
     let leafletTileLayer = null;
     let mapMarkersLayer = null;
+
+    function getLastSeenKey() {
+      return `lereio_last_seen_${currentUser?.uid || "guest"}_${activeRoomCode || "none"}`;
+    }
+
+    function getLastSeenMap() {
+      try {
+        return JSON.parse(localStorage.getItem(getLastSeenKey()) || "{}");
+      } catch (_) {
+        return {};
+      }
+    }
+
+    function setLastSeenEntry(key, ts) {
+      const map = getLastSeenMap();
+      map[key] = ts || Date.now();
+      localStorage.setItem(getLastSeenKey(), JSON.stringify(map));
+      renderNotifications();
+    }
 
     function applyAppearance(mode, accentKey) {
       const prevMode = currentMode;
@@ -682,7 +775,7 @@
         root.setProperty("--bg-base", "#f8fafc");
         root.setProperty("--bg-card", "#ffffff");
         root.setProperty("--bg-elevated", "#f1f5f9");
-        root.setProperty("--nav-bg", "rgba(255, 255, 255, 0.94)");
+        root.setProperty("--nav-bg", "rgba(255, 255, 255, 0.96)");
         root.setProperty("--text-main", "#0f172a");
         root.setProperty("--text-muted", "#64748b");
         root.setProperty("--border-soft", "rgba(15, 23, 42, 0.10)");
@@ -693,7 +786,7 @@
         root.setProperty("--bg-base", "#0c1018");
         root.setProperty("--bg-card", "#131926");
         root.setProperty("--bg-elevated", "#1b2436");
-        root.setProperty("--nav-bg", "rgba(19, 25, 38, 0.94)");
+        root.setProperty("--nav-bg", "rgba(19, 25, 38, 0.96)");
         root.setProperty("--text-main", "#f1f5f9");
         root.setProperty("--text-muted", "#8b9bb4");
         root.setProperty("--border-soft", "rgba(148, 163, 184, 0.14)");
@@ -772,6 +865,7 @@
     function closeAllModals() {
       document.getElementById("settingsModal").classList.add("hidden");
       document.getElementById("profileModal").classList.add("hidden");
+      document.getElementById("notificationsModal").classList.add("hidden");
     }
 
     // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
@@ -996,7 +1090,9 @@
       }
       activeRoomCode = "";
       membersMap = {};
+      allMessages = [];
       allMemories = [];
+      allPosts = [];
       showLobby();
     });
 
@@ -1024,13 +1120,15 @@
         membersMap = {};
         snap.forEach((d) => { membersMap[d.id] = d.data(); });
         renderProfilesAndMap();
+        renderNotifications();
       }));
 
       const chatQ = query(collection(db, "rooms", code, "messages"), orderBy("createdAt", "asc"));
       unsubscribers.push(onSnapshot(chatQ, (snap) => {
-        const msgs = [];
-        snap.forEach((d) => msgs.push({ id: d.id, ...d.data() }));
-        renderChat(msgs);
+        allMessages = [];
+        snap.forEach((d) => allMessages.push({ id: d.id, ...d.data() }));
+        renderChat(allMessages);
+        renderNotifications();
       }));
 
       const memQ = query(collection(db, "rooms", code, "memories"), orderBy("createdAt", "desc"));
@@ -1038,13 +1136,15 @@
         allMemories = [];
         snap.forEach((d) => allMemories.push({ id: d.id, ...d.data() }));
         renderMemories();
+        renderNotifications();
       }));
 
       const feedQ = query(collection(db, "rooms", code, "posts"), orderBy("createdAt", "desc"));
       unsubscribers.push(onSnapshot(feedQ, (snap) => {
-        const posts = [];
-        snap.forEach((d) => posts.push({ id: d.id, ...d.data() }));
-        renderFeed(posts);
+        allPosts = [];
+        snap.forEach((d) => allPosts.push({ id: d.id, ...d.data() }));
+        renderFeed(allPosts);
+        renderNotifications();
       }));
     }
 
@@ -1057,7 +1157,136 @@
       return partnerId ? membersMap[partnerId] : null;
     }
 
-    // ==================== INTERACTIVE MINI-MAP & DISTANCE ====================
+    // ==================== IN-APP NOTIFICATIONS ====================
+    function buildActivityItems() {
+      const items = [];
+
+      allMessages.forEach((m) => {
+        if (!currentUser || m.senderUid === currentUser.uid) return;
+        const senderName = membersMap[m.senderUid]?.name || "Partner";
+        const ts = m.createdAt?.toDate ? m.createdAt.toDate().getTime() : Date.now();
+        items.push({
+          id: `msg_${m.id}`,
+          category: "chat",
+          targetTab: "chat",
+          icon: "fa-regular fa-comment-dots",
+          title: `${senderName} sent a message`,
+          detail: m.image ? "Sent a photo in chat" : (m.text || ""),
+          ts
+        });
+      });
+
+      allMemories.forEach((mem) => {
+        if (!currentUser || mem.uploadedBy === currentUser.uid) return;
+        const uploaderName = membersMap[mem.uploadedBy]?.name || "Partner";
+        const ts = mem.createdAt?.toDate ? mem.createdAt.toDate().getTime() : Date.now();
+        items.push({
+          id: `mem_${mem.id}`,
+          category: "memories",
+          targetTab: "memories",
+          icon: "fa-regular fa-images",
+          title: `${uploaderName} added a photo`,
+          detail: mem.caption || mem.album || "Shared Gallery",
+          ts
+        });
+      });
+
+      allPosts.forEach((p) => {
+        if (!currentUser || p.authorUid === currentUser.uid) return;
+        const authorName = membersMap[p.authorUid]?.name || "Partner";
+        const ts = p.createdAt?.toDate ? p.createdAt.toDate().getTime() : Date.now();
+        items.push({
+          id: `post_${p.id}`,
+          category: "feed",
+          targetTab: "feed",
+          icon: "fa-solid fa-feather-pointed",
+          title: `${authorName} left a note`,
+          detail: p.content || "",
+          ts
+        });
+      });
+
+      return items.sort((a, b) => b.ts - a.ts);
+    }
+
+    function renderNotifications() {
+      const badge = document.getElementById("notifBadge");
+      const list = document.getElementById("notificationsList");
+      if (!badge || !list) return;
+
+      const seenMap = getLastSeenMap();
+      const items = buildActivityItems();
+      const unreadItems = items.filter((item) => item.ts > (seenMap[item.category] || 0));
+
+      if (unreadItems.length > 0) {
+        badge.textContent = unreadItems.length > 9 ? "9+" : String(unreadItems.length);
+        badge.classList.remove("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+
+      if (items.length === 0) {
+        list.innerHTML = `
+          <div class="surface-pill rounded-2xl p-6 text-center space-y-1">
+            <i class="fa-regular fa-bell text-lg accent-text"></i>
+            <p class="text-xs font-semibold text-[var(--text-main)]">No partner activity yet</p>
+            <p class="text-[11px] text-[var(--text-muted)]">New messages, photos, and notes will appear here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = items.slice(0, 20).map((item) => {
+        const isUnread = item.ts > (seenMap[item.category] || 0);
+        return `
+          <button type="button" data-notif-tab="${item.targetTab}" data-notif-cat="${item.category}"
+            class="notif-item-btn w-full text-left p-3 rounded-2xl surface-pill flex items-start gap-3 hover:opacity-95 transition ${isUnread ? "border border-[var(--accent)]/60" : ""}">
+            <div class="w-8 h-8 rounded-xl accent-soft-bg flex items-center justify-center shrink-0 mt-0.5">
+              <i class="${item.icon} text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-semibold text-[var(--text-main)] truncate">${escapeHtml(item.title)}</p>
+                ${isUnread ? `<span class="w-2 h-2 rounded-full accent-bg shrink-0"></span>` : ""}
+              </div>
+              <p class="text-[11px] text-[var(--text-muted)] truncate mt-0.5">${escapeHtml(item.detail)}</p>
+              <p class="text-[10px] text-[var(--text-muted)]/75 mt-1">${formatTimeAgo(item.ts)}</p>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      list.querySelectorAll(".notif-item-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.notifCat;
+          const tab = btn.dataset.notifTab;
+          setLastSeenEntry(cat, Date.now());
+          document.getElementById("notificationsModal").classList.add("hidden");
+          switchTab(tab);
+        });
+      });
+    }
+
+    document.getElementById("openNotificationsBtn").addEventListener("click", () => {
+      renderNotifications();
+      document.getElementById("notificationsModal").classList.remove("hidden");
+    });
+
+    document.getElementById("closeNotificationsBtn").addEventListener("click", () => {
+      document.getElementById("notificationsModal").classList.add("hidden");
+    });
+
+    document.getElementById("markAllReadBtn").addEventListener("click", () => {
+      const nowTs = Date.now();
+      localStorage.setItem(getLastSeenKey(), JSON.stringify({
+        chat: nowTs,
+        memories: nowTs,
+        feed: nowTs
+      }));
+      renderNotifications();
+    });
+
+    // ==================== INTERACTIVE MINI-MAP & LOCATION PERMISSION ====================
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
       const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -1248,38 +1477,61 @@
       renderInteractiveMap(me, partner);
     }
 
-    document.getElementById("updateLocationBtn").addEventListener("click", () => {
-      if (!navigator.geolocation) return alert("Location is not supported on this device.");
+    async function obtainCurrentCoords() {
+      const capGeo = window.Capacitor?.Plugins?.Geolocation;
+      const isNative = Boolean(window.Capacitor?.isNativePlatform?.()) || window.Capacitor?.getPlatform?.() === "android";
+
+      if (isNative && capGeo) {
+        const perm = await capGeo.checkPermissions();
+        if (perm.location !== "granted" && perm.coarseLocation !== "granted") {
+          const req = await capGeo.requestPermissions();
+          if (req.location !== "granted" && req.coarseLocation !== "granted") {
+            throw new Error("Location permission was denied. Enable Location in Lereio App info.");
+          }
+        }
+        const pos = await capGeo.getCurrentPosition({ enableHighAccuracy: true, timeout: 12000 });
+        return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      }
+
+      if (!navigator.geolocation) {
+        throw new Error("Location is not supported on this device.");
+      }
+
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (err) => reject(err),
+          { enableHighAccuracy: true, timeout: 12000 }
+        );
+      });
+    }
+
+    document.getElementById("updateLocationBtn").addEventListener("click", async () => {
       const icon = document.getElementById("locSpinIcon");
       icon.classList.add("fa-spin");
 
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          let place = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+      try {
+        const { lat, lng } = await obtainCurrentCoords();
+        let place = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
 
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-            const geo = await res.json();
-            const addr = geo.address || {};
-            place = addr.suburb || addr.neighbourhood || addr.village || addr.city || addr.town || addr.county || place;
-          } catch (_) {}
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+          const geo = await res.json();
+          const addr = geo.address || {};
+          place = addr.suburb || addr.neighbourhood || addr.village || addr.city || addr.town || addr.county || place;
+        } catch (_) {}
 
-          await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
-            location: { lat, lng, place, updatedAt: Date.now() }
-          });
-          icon.classList.remove("fa-spin");
-        },
-        (err) => {
-          icon.classList.remove("fa-spin");
-          alert("Please allow location permission: " + err.message);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+        await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+          location: { lat, lng, place, updatedAt: Date.now() }
+        });
+      } catch (err) {
+        alert("Please allow location permission: " + (err?.message || err));
+      } finally {
+        icon.classList.remove("fa-spin");
+      }
     });
 
-    // ==================== HOME DAY COUNTER ====================
+    // ==================== HOME DAY COUNTER & REFRESH ====================
     function updateHomeCounters() {
       const now = new Date();
       const hour = now.getHours();
@@ -1326,9 +1578,76 @@
       let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
       if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
       const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
+      const nextMonthNum = months + 1;
       document.getElementById("monthsaryCountdown").textContent =
-        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} days`;
+        daysToMonth === 0 ? `Today! ♡` : `In ${daysToMonth} days`;
     }
+
+    function triggerHomeRefresh() {
+      const icon = document.getElementById("homeRefreshIcon");
+      const pullIcon = document.getElementById("pullRefreshIcon");
+      const pullLabel = document.getElementById("pullRefreshLabel");
+      const pullWrap = document.getElementById("pullRefreshIndicator");
+
+      icon?.classList.add("fa-spin");
+      pullWrap?.classList.remove("hidden");
+      pullWrap?.classList.add("flex");
+      pullIcon?.classList.add("fa-spin");
+      if (pullLabel) pullLabel.textContent = "Refreshing...";
+
+      updateHomeCounters();
+      renderProfilesAndMap();
+      renderNotifications();
+      if (activeRoomCode) {
+        startRoomListeners(activeRoomCode);
+      }
+
+      setTimeout(() => {
+        icon?.classList.remove("fa-spin");
+        pullIcon?.classList.remove("fa-spin");
+        pullWrap?.classList.add("hidden");
+        pullWrap?.classList.remove("flex");
+      }, 500);
+    }
+
+    document.getElementById("homeRefreshBtn").addEventListener("click", triggerHomeRefresh);
+
+    // Pull-down gesture on Home tab
+    const homeSec = document.getElementById("tab-home");
+    let pullStartY = 0;
+    let isPulling = false;
+
+    homeSec.addEventListener("touchstart", (e) => {
+      if (homeSec.scrollTop <= 0) {
+        pullStartY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, { passive: true });
+
+    homeSec.addEventListener("touchmove", (e) => {
+      if (!isPulling || homeSec.scrollTop > 0) return;
+      const deltaY = e.touches[0].clientY - pullStartY;
+      if (deltaY > 25) {
+        const pullWrap = document.getElementById("pullRefreshIndicator");
+        const pullLabel = document.getElementById("pullRefreshLabel");
+        pullWrap.classList.remove("hidden");
+        pullWrap.classList.add("flex");
+        pullLabel.textContent = deltaY > 75 ? "Release to refresh" : "Pull down to refresh";
+      }
+    }, { passive: true });
+
+    homeSec.addEventListener("touchend", (e) => {
+      if (!isPulling) return;
+      const deltaY = e.changedTouches[0].clientY - pullStartY;
+      isPulling = false;
+      if (deltaY > 75 && homeSec.scrollTop <= 0) {
+        triggerHomeRefresh();
+      } else {
+        const pullWrap = document.getElementById("pullRefreshIndicator");
+        pullWrap.classList.add("hidden");
+        pullWrap.classList.remove("flex");
+      }
+    }, { passive: true });
 
     setInterval(updateHomeCounters, 15000);
 
@@ -1380,33 +1699,47 @@
     });
 
     // ==================== BOTTOM ICON NAVIGATION ====================
-    document.querySelectorAll(".nav-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const tabName = btn.dataset.tab;
-        ["home", "chat", "memories", "feed"].forEach((t) => {
-          document.getElementById(`tab-${t}`).classList.add("hidden");
-        });
-        document.querySelectorAll(".nav-btn").forEach((b) => {
-          b.classList.remove("accent-text");
-          b.classList.add("text-[var(--text-muted)]");
-        });
-
-        const activeSec = document.getElementById(`tab-${tabName}`);
-        activeSec.classList.remove("hidden");
-        if (tabName === "home" && leafletMap) {
-          setTimeout(() => leafletMap.invalidateSize(), 100);
-        }
-        if (tabName === "chat") {
-          activeSec.classList.add("flex");
-          const c = document.getElementById("chatMessagesContainer");
-          c.scrollTop = c.scrollHeight;
-        }
-        btn.classList.remove("text-[var(--text-muted)]");
-        btn.classList.add("accent-text");
+    function switchTab(tabName) {
+      activeTab = tabName;
+      ["home", "chat", "memories", "feed"].forEach((t) => {
+        const el = document.getElementById(`tab-${t}`);
+        el.classList.add("hidden");
+        el.classList.remove("active-chat");
       });
+
+      document.querySelectorAll(".nav-btn").forEach((b) => {
+        b.classList.remove("accent-text");
+        b.classList.add("text-[var(--text-muted)]");
+      });
+
+      const activeSec = document.getElementById(`tab-${tabName}`);
+      activeSec.classList.remove("hidden");
+
+      if (tabName === "chat") {
+        activeSec.classList.add("active-chat");
+        setLastSeenEntry("chat", Date.now());
+        const c = document.getElementById("chatMessagesContainer");
+        c.scrollTop = c.scrollHeight;
+      } else if (tabName === "memories") {
+        setLastSeenEntry("memories", Date.now());
+      } else if (tabName === "feed") {
+        setLastSeenEntry("feed", Date.now());
+      } else if (tabName === "home" && leafletMap) {
+        setTimeout(() => leafletMap.invalidateSize(), 100);
+      }
+
+      const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+      if (activeBtn) {
+        activeBtn.classList.remove("text-[var(--text-muted)]");
+        activeBtn.classList.add("accent-text");
+      }
+    }
+
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
     });
 
-    // ==================== CHAT ====================
+    // ==================== CHAT (SEND, EDIT, DELETE) ====================
     function renderChat(messages) {
       const container = document.getElementById("chatMessagesContainer");
       if (messages.length === 0) {
@@ -1426,15 +1759,25 @@
         const timeStr = msg.createdAt?.toDate
           ? msg.createdAt.toDate().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
           : "Sending...";
+        const editedLabel = msg.edited ? ` · edited` : "";
 
         if (isMe) {
           return `
-            <div class="flex flex-col items-end">
+            <div class="flex flex-col items-end group">
               ${msg.image
                 ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
                 : `<div class="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm accent-bg text-sm font-medium">${escapeHtml(msg.text)}</div>`
               }
-              <span class="text-[10px] text-[var(--text-muted)] mt-1 pr-1">${timeStr}</span>
+              <div class="flex items-center gap-2 mt-1 pr-1">
+                ${!msg.image ? `
+                  <button type="button" data-edit-msg="${msg.id}" class="edit-msg-btn text-[10px] text-[var(--text-muted)] hover:accent-text" title="Edit message">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>` : ""}
+                <button type="button" data-del-msg="${msg.id}" class="del-msg-btn text-[10px] text-[var(--text-muted)] hover:text-rose-400" title="Delete message">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+                <span class="text-[10px] text-[var(--text-muted)]">${timeStr}${editedLabel}</span>
+              </div>
             </div>
           `;
         } else {
@@ -1450,12 +1793,34 @@
                   ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
                   : `<div class="max-w-[240px] px-4 py-2.5 rounded-2xl rounded-bl-sm surface-card text-[var(--text-main)] text-sm">${escapeHtml(msg.text)}</div>`
                 }
-                <span class="text-[10px] text-[var(--text-muted)] mt-1 pl-1">${timeStr}</span>
+                <span class="text-[10px] text-[var(--text-muted)] mt-1 pl-1">${timeStr}${editedLabel}</span>
               </div>
             </div>
           `;
         }
       }).join("");
+
+      container.querySelectorAll(".edit-msg-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const msg = messages.find((m) => m.id === btn.dataset.editMsg);
+          if (!msg || !msg.text) return;
+          const updatedText = prompt("Edit message:", msg.text);
+          if (updatedText === null) return;
+          const clean = updatedText.trim();
+          if (!clean || clean === msg.text) return;
+          await updateDoc(doc(db, "rooms", activeRoomCode, "messages", msg.id), {
+            text: clean,
+            edited: true
+          });
+        });
+      });
+
+      container.querySelectorAll(".del-msg-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Delete this message?")) return;
+          await deleteDoc(doc(db, "rooms", activeRoomCode, "messages", btn.dataset.delMsg));
+        });
+      });
 
       container.scrollTop = container.scrollHeight;
     }
@@ -1484,7 +1849,7 @@
       });
     });
 
-    // ==================== GALLERY ====================
+    // ==================== GALLERY (UPLOAD & DELETE) ====================
     function renderMemories() {
       const albums = spaceData.albums || ["All", "Moments", "Selfies", "Dates"];
       const filterBar = document.getElementById("albumFilterBar");
@@ -1535,7 +1900,11 @@
       }
 
       grid.innerHTML = filtered.map((item) => `
-        <div class="surface-card overflow-hidden">
+        <div class="surface-card overflow-hidden relative">
+          <button type="button" data-del-mem="${item.id}" title="Delete photo"
+            class="del-mem-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/65 text-white hover:text-rose-400 flex items-center justify-center text-xs transition">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
           <img src="${item.url}" class="w-full h-36 object-cover">
           <div class="p-2.5">
             <p class="text-xs text-[var(--text-main)] truncate">${escapeHtml(item.caption)}</p>
@@ -1543,6 +1912,14 @@
           </div>
         </div>
       `).join("");
+
+      grid.querySelectorAll(".del-mem-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!confirm("Delete this photo from Shared Gallery?")) return;
+          await deleteDoc(doc(db, "rooms", activeRoomCode, "memories", btn.dataset.delMem));
+        });
+      });
     }
 
     document.getElementById("newAlbumBtn").addEventListener("click", async () => {
@@ -1571,7 +1948,7 @@
       });
     });
 
-    // ==================== NOTES / WALL ====================
+    // ==================== NOTES / WALL (MULTI-EMOJI REACTIONS) ====================
     function renderFeed(posts) {
       const list = document.getElementById("feedPostsList");
       if (posts.length === 0) {
@@ -1588,13 +1965,24 @@
         const isMe = post.authorUid === currentUser.uid;
         const authorProf = membersMap[post.authorUid] || { name: "Partner", photo: "" };
         const displayAuthor = isMe ? "You" : (authorProf.name || "Partner");
-        const likes = post.likes || [];
-        const likedByMe = likes.includes(currentUser.uid);
+        const reactions = post.reactions || {};
         const comments = post.comments || [];
 
         const avatarHtml = authorProf.photo
           ? `<img src="${authorProf.photo}" class="w-7 h-7 rounded-full object-cover">`
           : `<div class="w-7 h-7 rounded-full surface-pill accent-text flex items-center justify-center font-bold text-xs">${escapeHtml((authorProf.name || "?")[0].toUpperCase())}</div>`;
+
+        const reactionButtonsHtml = REACTION_EMOJIS.map((emoji) => {
+          const uids = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
+          const active = uids.includes(currentUser.uid);
+          return `
+            <button type="button" data-react-post="${post.id}" data-emoji="${emoji}"
+              class="react-post-btn flex items-center gap-1 px-2 py-1 rounded-full surface-pill text-xs transition ${active ? "border border-[var(--accent)] accent-text font-semibold" : "text-[var(--text-muted)]"}">
+              <span>${emoji}</span>
+              ${uids.length > 0 ? `<span class="text-[10px]">${uids.length}</span>` : ""}
+            </button>
+          `;
+        }).join("");
 
         return `
           <div class="surface-card p-4 border-l-2 border-l-[var(--accent)] space-y-2.5">
@@ -1611,14 +1999,13 @@
 
             <p class="text-sm text-[var(--text-main)]/95 leading-relaxed">${escapeHtml(post.content)}</p>
 
-            <div class="flex items-center justify-between pt-2 border-t border-[var(--border-soft)] text-xs text-[var(--text-muted)]">
-              <button data-like="${post.id}" class="like-post-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full surface-pill ${likedByMe ? "accent-text" : ""}">
-                <i class="${likedByMe ? "fa-solid" : "fa-regular"} fa-heart"></i>
-                <span>${likes.length}</span>
-              </button>
-              <button data-comment="${post.id}" class="comment-post-btn flex items-center gap-1.5 hover:text-[var(--text-main)]">
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-[var(--border-soft)] text-xs text-[var(--text-muted)]">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                ${reactionButtonsHtml}
+              </div>
+              <button data-comment="${post.id}" class="comment-post-btn flex items-center gap-1.5 hover:text-[var(--text-main)] shrink-0">
                 <i class="fa-regular fa-comment"></i>
-                <span>${comments.length} ${comments.length === 1 ? "reply" : "replies"}</span>
+                <span>${comments.length}</span>
               </button>
             </div>
 
@@ -1631,15 +2018,24 @@
         `;
       }).join("");
 
-      list.querySelectorAll(".like-post-btn").forEach((btn) => {
+      list.querySelectorAll(".react-post-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const post = posts.find((p) => p.id === btn.dataset.like);
+          const postId = btn.dataset.reactPost;
+          const emoji = btn.dataset.emoji;
+          const post = posts.find((p) => p.id === postId);
           if (!post) return;
-          const likes = post.likes || [];
-          const updated = likes.includes(currentUser.uid)
-            ? likes.filter((id) => id !== currentUser.uid)
-            : [...likes, currentUser.uid];
-          await updateDoc(doc(db, "rooms", activeRoomCode, "posts", post.id), { likes: updated });
+
+          const currentReactions = { ...(post.reactions || {}) };
+          const listForEmoji = Array.isArray(currentReactions[emoji]) ? [...currentReactions[emoji]] : [];
+          if (listForEmoji.includes(currentUser.uid)) {
+            currentReactions[emoji] = listForEmoji.filter((id) => id !== currentUser.uid);
+          } else {
+            currentReactions[emoji] = [...listForEmoji, currentUser.uid];
+          }
+
+          await updateDoc(doc(db, "rooms", activeRoomCode, "posts", postId), {
+            reactions: currentReactions
+          });
         });
       });
 
@@ -1669,7 +2065,7 @@
       await addDoc(collection(db, "rooms", activeRoomCode, "posts"), {
         authorUid: currentUser.uid,
         content,
-        likes: [],
+        reactions: {},
         comments: [],
         createdAt: serverTimestamp()
       });
