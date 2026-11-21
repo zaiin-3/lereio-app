@@ -164,6 +164,18 @@
 
   <div class="app-shell w-full max-w-[430px] md:rounded-[34px] md:border md:border-slate-500/20 md:shadow-2xl relative flex flex-col overflow-hidden">
 
+    <!-- ==================== STARTUP LOADING SCREEN (PREVENTS LOGIN FLASH) ==================== -->
+    <div id="loadingScreen" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
+        <span class="font-editorial text-4xl tracking-wide text-[var(--text-main)]">Lereio</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+        <i class="fa-solid fa-circle-notch fa-spin accent-text"></i>
+        <span>Opening your space...</span>
+      </div>
+    </div>
+
     <!-- ==================== OPTIONAL 4-DIGIT PRIVACY PIN LOCK ==================== -->
     <div id="pinLockOverlay" class="hidden absolute inset-0 z-50 bg-[var(--bg-base)] flex flex-col items-center justify-between p-8 text-center">
       <div class="pt-4 flex items-center gap-2">
@@ -209,7 +221,7 @@
     </div>
 
     <!-- ==================== 1. EMAIL & PASSWORD SIGN IN SCREEN ==================== -->
-    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
+    <div id="authScreen" class="hidden flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
       <div class="pt-4 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
         <span class="font-editorial text-3xl tracking-wide text-[var(--text-main)]">Lereio</span>
@@ -840,7 +852,7 @@
 
   </div>
 
-  <!-- ==================== FIREBASE EMAIL/PASSWORD + FIRESTORE + CAPACITOR ==================== -->
+  <!-- ==================== FIREBASE EMAIL/PASSWORD + PERSISTENT FIRESTORE + CAPACITOR ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
@@ -848,7 +860,8 @@
       onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
-      getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+      initializeFirestore, persistentLocalCache,
+      doc, setDoc, getDoc, updateDoc, deleteDoc,
       collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, arrayUnion, arrayRemove
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -863,11 +876,14 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache()
+    });
 
     const LOCAL_MODE_KEY = "lereio_appearance_mode_v1";
     const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
     const LOCAL_PIN_KEY = "lereio_privacy_pin_v1";
+    const LOCAL_ROOM_HINT_KEY = "lereio_last_room_code_v1";
 
     const ACCENTS = {
       blue:    { dark: "#60a5fa", darkContrast: "#08111e", light: "#2563eb", lightContrast: "#ffffff", soft: "rgba(96, 165, 250, 0.14)", glow: "rgba(96, 165, 250, 0.11)" },
@@ -1027,7 +1043,7 @@
 
     checkAndShowPinLock();
 
-    // ==================== FULL-SCREEN PHOTO VIEWER + SAVE ====================
+    // ==================== FULL-SCREEN PHOTO VIEWER + ANDROID FILESYSTEM SAVE ====================
     function openPhotoViewer(dataUrl, caption = "Lereio Photo") {
       if (!dataUrl) return;
       activeViewerDataUrl = dataUrl;
@@ -1049,22 +1065,35 @@
       label.textContent = "Saving...";
 
       try {
-        const res = await fetch(activeViewerDataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], filename, { type: "image/jpeg" });
+        const base64Data = activeViewerDataUrl.includes(",")
+          ? activeViewerDataUrl.split(",")[1]
+          : activeViewerDataUrl;
 
-        // 1. On mobile / Capacitor, native share sheet lets users save directly to Photos/Gallery
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: "Lereio Photo"
+        const capFs = window.Capacitor?.Plugins?.Filesystem;
+        const isNative = Boolean(window.Capacitor?.isNativePlatform?.());
+
+        if (isNative && capFs) {
+          if (capFs.checkPermissions && capFs.requestPermissions) {
+            const perms = await capFs.checkPermissions();
+            if (perms.publicStorage !== "granted") {
+              await capFs.requestPermissions();
+            }
+          }
+
+          await capFs.writeFile({
+            path: `Download/${filename}`,
+            data: base64Data,
+            directory: "EXTERNAL_STORAGE",
+            recursive: true
           });
-          label.textContent = "Saved!";
-          setTimeout(() => { label.textContent = "Save"; }, 1800);
+
+          label.textContent = "Saved to Downloads!";
+          setTimeout(() => { label.textContent = "Save"; }, 2000);
           return;
         }
 
-        // 2. Fallback: Blob URL download (works much better on browsers than raw data: URLs)
+        const res = await fetch(activeViewerDataUrl);
+        const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = blobUrl;
@@ -1077,13 +1106,7 @@
         label.textContent = "Saved!";
         setTimeout(() => { label.textContent = "Save"; }, 1800);
       } catch (err) {
-        // If user cancelled the share sheet, don't falsely say "Saved!"
-        if (err && err.name === "AbortError") {
-          label.textContent = "Save";
-          return;
-        }
-        // Last-resort fallback: open image in a new tab so long-press -> Save Image works
-        window.open(activeViewerDataUrl, "_blank");
+        alert("Could not save image: " + (err?.message || err));
         label.textContent = "Save";
       }
     });
@@ -1181,7 +1204,6 @@
       return div.innerHTML;
     }
 
-    // Crisp High-Res helper that stays safely under Firestore's 1 MB document limit
     function compressImage(file, maxWidth = 1360, quality = 0.85) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -1291,6 +1313,7 @@
       closeAllModals();
       clearListeners();
       activeRoomCode = "";
+      localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
       await signOut(auth);
     };
 
@@ -1299,10 +1322,13 @@
 
     onAuthStateChanged(auth, async (user) => {
       closeAllModals();
+      const loadingEl = document.getElementById("loadingScreen");
+
       if (!user) {
         currentUser = null;
         activeRoomCode = "";
         clearListeners();
+        loadingEl.classList.add("hidden");
         document.getElementById("lobbyScreen").classList.add("hidden");
         document.getElementById("mainApp").classList.add("hidden");
         document.getElementById("authScreen").classList.remove("hidden");
@@ -1310,24 +1336,46 @@
       }
 
       currentUser = user;
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email || "",
-          roomCode: ""
-        });
-        showLobby();
-        return;
+      // Fast-path into cached room if available while Firestore syncs
+      const hintedRoom = localStorage.getItem(LOCAL_ROOM_HINT_KEY);
+      if (hintedRoom && !activeRoomCode) {
+        enterRoom(hintedRoom, false, true);
       }
 
-      const savedRoom = userSnap.data().roomCode;
-      if (savedRoom) {
-        await enterRoom(savedRoom, false);
-      } else {
-        showLobby();
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email || "",
+            roomCode: ""
+          });
+          localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
+          loadingEl.classList.add("hidden");
+          showLobby();
+          return;
+        }
+
+        const savedRoom = userSnap.data().roomCode;
+        if (savedRoom) {
+          localStorage.setItem(LOCAL_ROOM_HINT_KEY, savedRoom);
+          await enterRoom(savedRoom, false, false);
+        } else {
+          localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
+          loadingEl.classList.add("hidden");
+          showLobby();
+        }
+      } catch (_) {
+        // Offline fallback: stay in hinted room if cached
+        if (hintedRoom) {
+          enterRoom(hintedRoom, false, true);
+        } else {
+          loadingEl.classList.add("hidden");
+          showLobby();
+        }
       }
     });
 
@@ -1335,6 +1383,7 @@
     function showLobby() {
       closeAllModals();
       clearListeners();
+      document.getElementById("loadingScreen").classList.add("hidden");
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.add("hidden");
       document.getElementById("lobbyScreen").classList.remove("hidden");
@@ -1369,7 +1418,8 @@
         });
 
         await updateDoc(doc(db, "users", currentUser.uid), { roomCode: code });
-        await enterRoom(code, true);
+        localStorage.setItem(LOCAL_ROOM_HINT_KEY, code);
+        await enterRoom(code, true, false);
       } catch (err) {
         alert("Could not create space: " + err.message);
       } finally {
@@ -1421,18 +1471,26 @@
       }
 
       await updateDoc(doc(db, "users", currentUser.uid), { roomCode: raw });
-      await enterRoom(raw, isNewMember);
+      localStorage.setItem(LOCAL_ROOM_HINT_KEY, raw);
+      await enterRoom(raw, isNewMember, false);
     });
 
-    async function enterRoom(code, promptProfileSetup) {
-      const snap = await getDoc(doc(db, "rooms", code));
-      if (!snap.exists()) {
-        await updateDoc(doc(db, "users", currentUser.uid), { roomCode: "" });
-        showLobby();
-        return;
+    async function enterRoom(code, promptProfileSetup, isFastPath) {
+      if (!isFastPath) {
+        try {
+          const snap = await getDoc(doc(db, "rooms", code));
+          if (!snap.exists()) {
+            await updateDoc(doc(db, "users", currentUser.uid), { roomCode: "" });
+            localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
+            showLobby();
+            return;
+          }
+        } catch (_) {}
       }
 
       activeRoomCode = code;
+      localStorage.setItem(LOCAL_ROOM_HINT_KEY, code);
+      document.getElementById("loadingScreen").classList.add("hidden");
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("lobbyScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.remove("hidden");
@@ -1451,6 +1509,7 @@
     document.getElementById("unlinkSpaceBtn").addEventListener("click", async () => {
       if (!confirm("Unlink from this room and return to the Create / Join lobby?")) return;
       closeAllModals();
+      localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
       if (activeRoomCode && currentUser) {
         try {
           await updateDoc(doc(db, "rooms", activeRoomCode), { memberUids: arrayRemove(currentUser.uid) });
