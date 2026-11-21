@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,12 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Leaflet Interactive Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
-      /* Default: Dark Mode + Midnight Blue */
       --bg-outer: #07090e;
       --bg-base: #0c1018;
       --bg-card: #131926;
@@ -110,7 +108,6 @@
       scrollbar-width: none;
     }
 
-    /* Leaflet Mini-Map Styling (OpenStreetMap + Dark Mode Filter) */
     #miniMapContainer {
       height: 175px;
       width: 100%;
@@ -167,10 +164,10 @@
         <div class="pt-4">
           <button id="googleSignInBtn" class="w-full py-3.5 px-5 rounded-2xl bg-white text-slate-900 font-semibold text-sm flex items-center justify-center gap-3 shadow-lg hover:opacity-95 transition">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-            <span>Continue with Google</span>
+            <span id="googleSignInLabel">Continue with Google</span>
           </button>
         </div>
-        <p id="authErrorMsg" class="text-xs text-rose-400 hidden pt-2"></p>
+        <p id="authErrorMsg" class="text-xs text-rose-400 hidden pt-2 break-words"></p>
       </div>
 
       <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Your space stays saved across devices</p>
@@ -197,7 +194,6 @@
           </p>
         </div>
 
-        <!-- Option A: Generate Invite Code -->
         <div class="surface-card p-4 space-y-3 text-left">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl accent-soft-bg flex items-center justify-center">
@@ -220,7 +216,6 @@
           <div class="h-px flex-1 bg-[var(--border-soft)]"></div>
         </div>
 
-        <!-- Option B: Join Partner's Code -->
         <form id="joinSpaceForm" class="surface-card p-4 space-y-3 text-left">
           <label class="block text-xs font-semibold text-[var(--text-main)]">Enter Partner's Code</label>
           <div class="flex gap-2">
@@ -240,7 +235,6 @@
     <!-- ==================== 3. MAIN APP SHELL ==================== -->
     <div id="mainApp" class="hidden flex-1 flex flex-col overflow-hidden">
 
-      <!-- Clean Top Header -->
       <header class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0">
         <div class="flex items-center gap-2">
           <span class="w-2 h-2 rounded-full accent-bg"></span>
@@ -248,7 +242,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Edit My Profile Pill -->
           <button id="openProfileBtn" class="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
             <img id="headerMyAvatar" src="" class="w-6 h-6 rounded-full object-cover hidden" alt="Me">
             <div id="headerMyInitial" class="w-6 h-6 rounded-full accent-soft-bg text-[11px] font-bold flex items-center justify-center">?</div>
@@ -256,27 +249,23 @@
             <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
           </button>
 
-          <!-- Settings & Theme Trigger -->
           <button id="openSettingsBtn" class="w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Space & Theme Settings">
             <i class="fa-solid fa-sliders text-xs accent-text"></i>
           </button>
         </div>
       </header>
 
-      <!-- Main Scrollable Content Area -->
       <main class="flex-1 overflow-y-auto no-scrollbar pb-24">
 
-        <!-- ==================== TAB 1: HOME / OVERVIEW ==================== -->
+        <!-- TAB 1: HOME / OVERVIEW -->
         <section id="tab-home" class="p-5 space-y-4">
-
-          <!-- Couple Greeting & Dual Avatars -->
           <div class="surface-card p-4 flex items-center justify-between">
             <div class="space-y-0.5">
               <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
               <h1 class="font-editorial text-3xl text-[var(--text-main)]">
                 <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
               </h1>
-              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
+              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">â€”</p>
             </div>
 
             <div class="flex items-center -space-x-2.5 shrink-0">
@@ -284,12 +273,11 @@
                 Me
               </div>
               <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
-                ♡
+                â™¡
               </div>
             </div>
           </div>
 
-          <!-- Invite Code Banner (Shown until partner joins) -->
           <div id="inviteBannerCard" class="surface-card p-4 flex items-center justify-between border border-dashed border-[var(--accent)]/50">
             <div>
               <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Waiting for Partner</p>
@@ -302,7 +290,6 @@
             </button>
           </div>
 
-          <!-- Live Interactive Mini-Map & Distance Card -->
           <div class="surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -326,27 +313,24 @@
               </div>
             </div>
 
-            <!-- Interactive Leaflet Mini-Map -->
             <div id="miniMapWrapper" class="hidden relative">
               <div id="miniMapContainer" class="border border-[var(--border-soft)]"></div>
             </div>
 
-            <!-- Two-Column Partner Location Pills -->
             <div class="grid grid-cols-2 gap-2.5">
               <div class="surface-pill rounded-2xl p-3">
                 <p id="myLocNameLabel" class="text-[11px] font-semibold accent-text truncate">You</p>
                 <p id="myLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
               </div>
               <div class="surface-pill rounded-2xl p-3">
                 <p id="partnerLocNameLabel" class="text-[11px] font-semibold accent-text truncate">Partner</p>
                 <p id="partnerLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
               </div>
             </div>
           </div>
 
-          <!-- Circular Milestone Ring Card -->
           <div class="surface-card p-6 flex flex-col items-center text-center">
             <div id="counterConfiguredView" class="w-full flex flex-col items-center">
               <div class="relative w-40 h-40 flex items-center justify-center my-1">
@@ -361,7 +345,6 @@
                 </div>
               </div>
 
-              <!-- 3-Column Bento Breakdown -->
               <div class="grid grid-cols-3 gap-2.5 w-full mt-4">
                 <div class="surface-pill rounded-2xl py-2.5 px-2">
                   <p id="weeksVal" class="text-base font-semibold text-[var(--text-main)]">0</p>
@@ -377,20 +360,18 @@
                 </div>
               </div>
 
-              <!-- Upcoming Milestones Row -->
               <div class="grid grid-cols-2 gap-2.5 w-full mt-2.5 text-left">
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
-                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
                 </div>
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
-                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
                 </div>
               </div>
             </div>
 
-            <!-- Unset Anniversary State -->
             <div id="counterUnsetView" class="hidden py-5 space-y-3">
               <p class="font-editorial text-3xl text-[var(--text-main)]">Set Your Start Date</p>
               <p class="text-xs text-[var(--text-muted)] max-w-[240px] mx-auto">Add your anniversary date to start your live day counter.</p>
@@ -401,11 +382,11 @@
           </div>
         </section>
 
-        <!-- ==================== TAB 2: DIRECT CHAT ==================== -->
+        <!-- TAB 2: DIRECT CHAT -->
         <section id="tab-chat" class="hidden h-full flex flex-col">
           <div class="px-5 py-3 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
-              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
+              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">â™¡</div>
               <div>
                 <h2 id="chatPartnerName" class="text-sm font-semibold text-[var(--text-main)]">Partner</h2>
                 <p id="chatPartnerSub" class="text-[11px] text-[var(--text-muted)]">Private Space</p>
@@ -429,7 +410,7 @@
           </form>
         </section>
 
-        <!-- ==================== TAB 3: SHARED GALLERY ==================== -->
+        <!-- TAB 3: SHARED GALLERY -->
         <section id="tab-memories" class="hidden p-5 space-y-4">
           <div class="flex items-center justify-between">
             <div>
@@ -452,7 +433,7 @@
             <img id="latestMemoryImg" src="" class="w-full h-full object-cover" alt="Latest">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
               <span class="text-[10px] uppercase tracking-widest accent-text font-semibold">Latest Highlight</span>
-              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">—</p>
+              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">â€”</p>
             </div>
           </div>
 
@@ -460,7 +441,7 @@
           <div id="memoriesGrid" class="grid grid-cols-2 gap-3"></div>
         </section>
 
-        <!-- ==================== TAB 4: SHARED NOTES / WALL ==================== -->
+        <!-- TAB 4: SHARED NOTES / WALL -->
         <section id="tab-feed" class="hidden p-5 space-y-4">
           <div class="surface-card p-4 space-y-3">
             <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
@@ -480,7 +461,6 @@
 
       </main>
 
-      <!-- Bottom Icon Navigation Bar -->
       <nav style="background-color: var(--nav-bg);" class="absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 py-2.5 flex items-center justify-between z-20">
         <button data-tab="home" class="nav-btn flex flex-col items-center gap-1 accent-text">
           <i class="fa-solid fa-house text-base"></i>
@@ -501,7 +481,7 @@
       </nav>
     </div>
 
-    <!-- ==================== PROFILE EDIT MODAL ==================== -->
+    <!-- PROFILE EDIT MODAL -->
     <div id="profileModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
       <div class="surface-card w-full max-w-sm p-5 space-y-4">
         <div class="flex items-center justify-between">
@@ -534,7 +514,7 @@
       </div>
     </div>
 
-    <!-- ==================== SPACE & THEME SETTINGS MODAL ==================== -->
+    <!-- SPACE & THEME SETTINGS MODAL -->
     <div id="settingsModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
       <div class="surface-card w-full max-w-sm p-5 space-y-4">
         <div class="flex items-center justify-between">
@@ -544,7 +524,6 @@
           </button>
         </div>
 
-        <!-- Dark Mode (Default) / Light Mode Toggle -->
         <div>
           <label class="block text-xs text-[var(--text-muted)] mb-2">Appearance Mode</label>
           <div class="grid grid-cols-2 gap-2">
@@ -559,7 +538,6 @@
           </div>
         </div>
 
-        <!-- Simple 4-Color Accent Picker -->
         <div>
           <label class="block text-xs text-[var(--text-muted)] mb-2">Accent Color</label>
           <div class="grid grid-cols-4 gap-2" id="themePickerGrid">
@@ -582,7 +560,6 @@
           </div>
         </div>
 
-        <!-- Anniversary Date -->
         <div>
           <label class="block text-xs text-[var(--text-muted)] mb-1.5">Anniversary / Start Date</label>
           <input id="anniversaryInput" type="date" class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
@@ -592,7 +569,6 @@
           Save Changes
         </button>
 
-        <!-- Room Code & Account Controls -->
         <div class="pt-2 border-t border-[var(--border-soft)] flex justify-between items-center text-[11px]">
           <span class="text-[var(--text-muted)]">Code: <strong id="settingsCodeLabel" class="text-[var(--text-main)]">---</strong></span>
           <div class="flex items-center gap-3">
@@ -605,10 +581,13 @@
 
   </div>
 
-  <!-- ==================== FIREBASE REAL-TIME SYNC & LOGIC ==================== -->
+  <!-- ==================== FIREBASE + NATIVE CAPACITOR GOOGLE AUTH ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential,
+      onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
       collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, arrayUnion, arrayRemove
@@ -623,10 +602,22 @@
       appId: "1:625861224922:web:04877017f1f2d04b67b8e3"
     };
 
+    const WEB_CLIENT_ID = "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com";
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
+
+    const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.());
+
+    if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+      window.Capacitor.Plugins.GoogleAuth.initialize({
+        clientId: WEB_CLIENT_ID,
+        scopes: ["profile", "email"],
+        grantOfflineAccess: true
+      });
+    }
 
     const LOCAL_MODE_KEY = "lereio_appearance_mode_v1";
     const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
@@ -640,7 +631,7 @@
 
     let currentUser = null;
     let activeRoomCode = "";
-    let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark"; // Dark mode default
+    let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
     let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
 
     let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [] };
@@ -650,12 +641,10 @@
     let pendingAvatarBase64 = null;
     let unsubscribers = [];
 
-    // Leaflet Map state
     let leafletMap = null;
     let leafletTileLayer = null;
     let mapMarkersLayer = null;
 
-    // ==================== DARK / LIGHT MODE & 4 ACCENT COLORS ====================
     function applyAppearance(mode, accentKey) {
       const prevMode = currentMode;
       currentMode = mode === "light" ? "light" : "dark";
@@ -714,7 +703,6 @@
       btn.addEventListener("click", () => applyAppearance(currentMode, btn.dataset.theme));
     });
 
-    // ==================== HELPERS ====================
     function generateInviteCode() {
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let code = "LRO-";
@@ -764,15 +752,28 @@
       document.getElementById("profileModal").classList.add("hidden");
     }
 
-    // ==================== GOOGLE AUTHENTICATION ====================
+    // ==================== GOOGLE AUTHENTICATION (NATIVE ANDROID + WEB) ====================
     document.getElementById("googleSignInBtn").addEventListener("click", async () => {
       const errEl = document.getElementById("authErrorMsg");
+      const labelEl = document.getElementById("googleSignInLabel");
       errEl.classList.add("hidden");
+      labelEl.textContent = "Signing in...";
+
       try {
-        await signInWithPopup(auth, provider);
+        if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+          const googleUser = await window.Capacitor.Plugins.GoogleAuth.signIn();
+          const idToken = googleUser?.authentication?.idToken;
+          if (!idToken) throw new Error("No ID token returned from Google.");
+          const credential = GoogleAuthProvider.credential(idToken);
+          await signInWithCredential(auth, credential);
+        } else {
+          await signInWithPopup(auth, provider);
+        }
       } catch (err) {
-        errEl.textContent = err.message;
+        errEl.textContent = err?.message || JSON.stringify(err);
         errEl.classList.remove("hidden");
+      } finally {
+        labelEl.textContent = "Continue with Google";
       }
     });
 
@@ -780,6 +781,9 @@
       closeAllModals();
       clearListeners();
       activeRoomCode = "";
+      if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+        try { await window.Capacitor.Plugins.GoogleAuth.signOut(); } catch (_) {}
+      }
       await signOut(auth);
     };
 
@@ -1004,7 +1008,7 @@
       return partnerId ? membersMap[partnerId] : null;
     }
 
-    // ==================== INTERACTIVE MINI-MAP & DISTANCE (100% FREE OSM) ====================
+    // ==================== INTERACTIVE MINI-MAP & DISTANCE ====================
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
       const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -1017,7 +1021,7 @@
     }
 
     function formatTimeAgo(ts) {
-      if (!ts) return "—";
+      if (!ts) return "â€”";
       const diffMins = Math.floor((Date.now() - ts) / 60000);
       if (diffMins < 1) return "Just now";
       if (diffMins < 60) return `${diffMins}m ago`;
@@ -1135,18 +1139,17 @@
         document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
         const pHtml = partner.photo
           ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
-          : escapeHtml((partner.name || "♡")[0].toUpperCase());
+          : escapeHtml((partner.name || "â™¡")[0].toUpperCase());
         partnerWrap.innerHTML = pHtml;
         chatPartnerAvatar.innerHTML = pHtml;
       } else {
         inviteBanner.classList.remove("hidden");
         document.getElementById("chatPartnerName").textContent = "Waiting for partner...";
         document.getElementById("chatPartnerSub").textContent = `Share code ${activeRoomCode}`;
-        partnerWrap.innerHTML = `♡`;
-        chatPartnerAvatar.innerHTML = `♡`;
+        partnerWrap.innerHTML = `â™¡`;
+        chatPartnerAvatar.innerHTML = `â™¡`;
       }
 
-      // Location Cards & Distance
       document.getElementById("myLocNameLabel").textContent = me.name || "You";
       document.getElementById("partnerLocNameLabel").textContent = partner?.name || "Partner";
 
@@ -1155,7 +1158,7 @@
         document.getElementById("myLocTimeText").textContent = formatTimeAgo(me.location.updatedAt);
       } else {
         document.getElementById("myLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("myLocTimeText").textContent = "—";
+        document.getElementById("myLocTimeText").textContent = "â€”";
       }
 
       if (partner?.location) {
@@ -1163,7 +1166,7 @@
         document.getElementById("partnerLocTimeText").textContent = formatTimeAgo(partner.location.updatedAt);
       } else {
         document.getElementById("partnerLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("partnerLocTimeText").textContent = "—";
+        document.getElementById("partnerLocTimeText").textContent = "â€”";
       }
 
       const distHeadline = document.getElementById("distanceHeadline");
@@ -1171,7 +1174,7 @@
 
       if (me.location && partner?.location) {
         const km = calculateDistanceKm(me.location.lat, me.location.lng, partner.location.lat, partner.location.lng);
-        if (km < 0.15) distHeadline.textContent = "Right next to each other ♡";
+        if (km < 0.15) distHeadline.textContent = "Right next to each other â™¡";
         else if (km < 1) distHeadline.textContent = `${Math.round(km * 1000)} meters apart`;
         else distHeadline.textContent = `${km.toFixed(1)} km apart`;
 
@@ -1269,13 +1272,13 @@
       if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
       const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
       document.getElementById("anniversaryCountdown").textContent =
-        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} days`;
+        daysToAnniv === 0 ? "Today! â™¡" : `In ${daysToAnniv} days`;
 
       let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
       if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
       const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
       document.getElementById("monthsaryCountdown").textContent =
-        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} days`;
+        daysToMonth === 0 ? "Today! â™¡" : `In ${daysToMonth} days`;
     }
 
     setInterval(updateHomeCounters, 15000);
@@ -1388,7 +1391,7 @@
         } else {
           const avatarHtml = senderProf.photo
             ? `<img src="${senderProf.photo}" class="w-6 h-6 rounded-full object-cover shrink-0 mb-4">`
-            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "♡")[0].toUpperCase())}</div>`;
+            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "â™¡")[0].toUpperCase())}</div>`;
 
           return `
             <div class="flex items-end gap-2">
@@ -1445,7 +1448,7 @@
         return `
           <button data-album="${escapeHtml(album)}"
             class="album-pill px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition ${active ? "accent-bg font-semibold" : "surface-pill text-[var(--text-muted)]"}">
-            ${escapeHtml(album)} · ${count}
+            ${escapeHtml(album)} Â· ${count}
           </button>
         `;
       }).join("");

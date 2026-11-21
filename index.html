@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -265,7 +265,7 @@
               <h1 class="font-editorial text-3xl text-[var(--text-main)]">
                 <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
               </h1>
-              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
+              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">â€”</p>
             </div>
 
             <div class="flex items-center -space-x-2.5 shrink-0">
@@ -273,7 +273,7 @@
                 Me
               </div>
               <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
-                ♡
+                â™¡
               </div>
             </div>
           </div>
@@ -321,12 +321,12 @@
               <div class="surface-pill rounded-2xl p-3">
                 <p id="myLocNameLabel" class="text-[11px] font-semibold accent-text truncate">You</p>
                 <p id="myLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
               </div>
               <div class="surface-pill rounded-2xl p-3">
                 <p id="partnerLocNameLabel" class="text-[11px] font-semibold accent-text truncate">Partner</p>
                 <p id="partnerLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
               </div>
             </div>
           </div>
@@ -363,11 +363,11 @@
               <div class="grid grid-cols-2 gap-2.5 w-full mt-2.5 text-left">
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
-                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
                 </div>
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
-                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
                 </div>
               </div>
             </div>
@@ -386,7 +386,7 @@
         <section id="tab-chat" class="hidden h-full flex flex-col">
           <div class="px-5 py-3 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
-              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
+              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">â™¡</div>
               <div>
                 <h2 id="chatPartnerName" class="text-sm font-semibold text-[var(--text-main)]">Partner</h2>
                 <p id="chatPartnerSub" class="text-[11px] text-[var(--text-muted)]">Private Space</p>
@@ -433,7 +433,7 @@
             <img id="latestMemoryImg" src="" class="w-full h-full object-cover" alt="Latest">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
               <span class="text-[10px] uppercase tracking-widest accent-text font-semibold">Latest Highlight</span>
-              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">—</p>
+              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">â€”</p>
             </div>
           </div>
 
@@ -1021,7 +1021,7 @@
     }
 
     function formatTimeAgo(ts) {
-      if (!ts) return "—";
+      if (!ts) return "â€”";
       const diffMins = Math.floor((Date.now() - ts) / 60000);
       if (diffMins < 1) return "Just now";
       if (diffMins < 60) return `${diffMins}m ago`;
@@ -1139,15 +1139,15 @@
         document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
         const pHtml = partner.photo
           ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
-          : escapeHtml((partner.name || "♡")[0].toUpperCase());
+          : escapeHtml((partner.name || "â™¡")[0].toUpperCase());
         partnerWrap.innerHTML = pHtml;
         chatPartnerAvatar.innerHTML = pHtml;
       } else {
         inviteBanner.classList.remove("hidden");
         document.getElementById("chatPartnerName").textContent = "Waiting for partner...";
         document.getElementById("chatPartnerSub").textContent = `Share code ${activeRoomCode}`;
-        partnerWrap.innerHTML = `♡`;
-        chatPartnerAvatar.innerHTML = `♡`;
+        partnerWrap.innerHTML = `â™¡`;
+        chatPartnerAvatar.innerHTML = `â™¡`;
       }
 
       document.getElementById("myLocNameLabel").textContent = me.name || "You";
@@ -1158,7 +1158,7 @@
         document.getElementById("myLocTimeText").textContent = formatTimeAgo(me.location.updatedAt);
       } else {
         document.getElementById("myLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("myLocTimeText").textContent = "—";
+        document.getElementById("myLocTimeText").textContent = "â€”";
       }
 
       if (partner?.location) {
@@ -1166,7 +1166,7 @@
         document.getElementById("partnerLocTimeText").textContent = formatTimeAgo(partner.location.updatedAt);
       } else {
         document.getElementById("partnerLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("partnerLocTimeText").textContent = "—";
+        document.getElementById("partnerLocTimeText").textContent = "â€”";
       }
 
       const distHeadline = document.getElementById("distanceHeadline");
@@ -1174,7 +1174,7 @@
 
       if (me.location && partner?.location) {
         const km = calculateDistanceKm(me.location.lat, me.location.lng, partner.location.lat, partner.location.lng);
-        if (km < 0.15) distHeadline.textContent = "Right next to each other ♡";
+        if (km < 0.15) distHeadline.textContent = "Right next to each other â™¡";
         else if (km < 1) distHeadline.textContent = `${Math.round(km * 1000)} meters apart`;
         else distHeadline.textContent = `${km.toFixed(1)} km apart`;
 
@@ -1272,13 +1272,13 @@
       if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
       const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
       document.getElementById("anniversaryCountdown").textContent =
-        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} days`;
+        daysToAnniv === 0 ? "Today! â™¡" : `In ${daysToAnniv} days`;
 
       let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
       if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
       const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
       document.getElementById("monthsaryCountdown").textContent =
-        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} days`;
+        daysToMonth === 0 ? "Today! â™¡" : `In ${daysToMonth} days`;
     }
 
     setInterval(updateHomeCounters, 15000);
@@ -1391,7 +1391,7 @@
         } else {
           const avatarHtml = senderProf.photo
             ? `<img src="${senderProf.photo}" class="w-6 h-6 rounded-full object-cover shrink-0 mb-4">`
-            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "♡")[0].toUpperCase())}</div>`;
+            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "â™¡")[0].toUpperCase())}</div>`;
 
           return `
             <div class="flex items-end gap-2">
@@ -1448,7 +1448,7 @@
         return `
           <button data-album="${escapeHtml(album)}"
             class="album-pill px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition ${active ? "accent-bg font-semibold" : "surface-pill text-[var(--text-muted)]"}">
-            ${escapeHtml(album)} · ${count}
+            ${escapeHtml(album)} Â· ${count}
           </button>
         `;
       }).join("");
