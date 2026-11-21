@@ -1046,29 +1046,45 @@
       if (!activeViewerDataUrl) return;
       const label = document.getElementById("saveViewerPhotoLabel");
       const filename = `Lereio_${Date.now()}.jpg`;
+      label.textContent = "Saving...";
 
       try {
+        const res = await fetch(activeViewerDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: "image/jpeg" });
+
+        // 1. On mobile / Capacitor, native share sheet lets users save directly to Photos/Gallery
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "Lereio Photo"
+          });
+          label.textContent = "Saved!";
+          setTimeout(() => { label.textContent = "Save"; }, 1800);
+          return;
+        }
+
+        // 2. Fallback: Blob URL download (works much better on browsers than raw data: URLs)
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = activeViewerDataUrl;
+        link.href = blobUrl;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
 
-        if (navigator.share && navigator.canShare) {
-          const res = await fetch(activeViewerDataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], filename, { type: "image/jpeg" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: "Lereio Photo" }).catch(() => {});
-          }
+        label.textContent = "Saved!";
+        setTimeout(() => { label.textContent = "Save"; }, 1800);
+      } catch (err) {
+        // If user cancelled the share sheet, don't falsely say "Saved!"
+        if (err && err.name === "AbortError") {
+          label.textContent = "Save";
+          return;
         }
-
-        label.textContent = "Saved!";
-        setTimeout(() => { label.textContent = "Save"; }, 1800);
-      } catch (_) {
-        label.textContent = "Saved!";
-        setTimeout(() => { label.textContent = "Save"; }, 1800);
+        // Last-resort fallback: open image in a new tab so long-press -> Save Image works
+        window.open(activeViewerDataUrl, "_blank");
+        label.textContent = "Save";
       }
     });
 
