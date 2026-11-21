@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lereio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg-outer: #07090e;
+      --bg-base: #0c1018;
+      --bg-card: #131926;
+      --bg-elevated: #1b2436;
+      --nav-bg: rgba(19, 25, 38, 0.94);
+      --accent: #60a5fa;
+      --accent-contrast: #08111e;
+      --accent-soft: rgba(96, 165, 250, 0.14);
+      --accent-glow: rgba(96, 165, 250, 0.11);
+      --text-main: #f1f5f9;
+      --text-muted: #8b9bb4;
+      --border-soft: rgba(148, 163, 184, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-outer);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .font-editorial {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 430px;
+      height: 100vh;
+      max-height: 920px;
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(circle at 85% 6%, var(--accent-glow) 0%, transparent 45%),
+        radial-gradient(circle at 15% 94%, var(--accent-glow) 0%, transparent 45%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+      transition: background-color 0.25s ease;
+    }
+
+    @media (min-width: 450px) {
+      .app-shell {
+        height: 92vh;
+        border-radius: 34px;
+        border: 1px solid var(--border-soft);
+      }
+    }
+
+    .surface-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .surface-pill {
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-soft);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .accent-bg {
+      background-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    .accent-text {
+      color: var(--accent);
+    }
+
+    .accent-soft-bg {
+      background-color: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    #miniMapContainer {
+      height: 175px;
+      width: 100%;
+      border-radius: 16px;
+      z-index: 1;
+      overflow: hidden;
+      background-color: var(--bg-elevated);
+    }
+    .dark-osm-tiles {
+      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(88%) saturate(80%);
+    }
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+    .avatar-pin {
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      border: 2.5px solid var(--accent);
+      background-color: var(--bg-card);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+    .avatar-pin img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ==================== 1. GOOGLE SIGN-IN SCREEN ==================== -->
+    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-8 text-center">
+      <div class="pt-6 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full accent-bg"></span>
+        <span class="text-[11px] uppercase tracking-[0.26em] text-[var(--text-muted)]">Private Space for Two</span>
+      </div>
+
+      <div class="space-y-4 max-w-xs">
+        <h1 class="font-editorial text-6xl tracking-tight text-[var(--text-main)]">Lereio</h1>
+        <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+          Sign in with Google to create a private couple's space or enter your partner's invite code to connect.
+        </p>
+
+        <div class="pt-4">
+          <button id="googleSignInBtn" class="w-full py-3.5 px-5 rounded-2xl bg-white text-slate-900 font-semibold text-sm flex items-center justify-center gap-3 shadow-lg hover:opacity-95 transition">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
+            <span id="googleSignInLabel">Continue with Google</span>
+          </button>
+        </div>
+        <p id="authErrorMsg" class="text-xs text-rose-400 hidden pt-2 break-words"></p>
+      </div>
+
+      <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Your space stays saved across devices</p>
+    </div>
+
+    <!-- ==================== 2. CREATE / JOIN SPACE LOBBY ==================== -->
+    <div id="lobbyScreen" class="hidden flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
+      <div class="w-full flex items-center justify-between pt-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full accent-bg"></span>
+          <span class="font-editorial text-2xl text-[var(--text-main)]">Lereio</span>
+        </div>
+        <button id="lobbySignOutBtn" class="text-xs text-[var(--text-muted)] hover:text-rose-400 transition">
+          Sign out
+        </button>
+      </div>
+
+      <div class="w-full max-w-xs space-y-5 my-auto py-6">
+        <div class="space-y-1">
+          <p id="lobbyWelcomeUser" class="text-xs accent-text font-semibold">Signed in</p>
+          <h2 class="font-editorial text-4xl text-[var(--text-main)]">Connect Your Space</h2>
+          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+            Create a brand-new private room and share the code, or enter the code your partner generated.
+          </p>
+        </div>
+
+        <div class="surface-card p-4 space-y-3 text-left">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl accent-soft-bg flex items-center justify-center">
+              <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-[var(--text-main)]">Create a New Space</p>
+              <p class="text-[11px] text-[var(--text-muted)]">Generate a 6-character invite code</p>
+            </div>
+          </div>
+          <button id="createSpaceBtn" class="w-full py-3 rounded-xl accent-bg font-semibold text-xs hover:opacity-95 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Generate Invite Code</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+          <div class="h-px flex-1 bg-[var(--border-soft)]"></div>
+          <span>OR JOIN WITH CODE</span>
+          <div class="h-px flex-1 bg-[var(--border-soft)]"></div>
+        </div>
+
+        <form id="joinSpaceForm" class="surface-card p-4 space-y-3 text-left">
+          <label class="block text-xs font-semibold text-[var(--text-main)]">Enter Partner's Code</label>
+          <div class="flex gap-2">
+            <input id="joinCodeInput" type="text" maxlength="7" placeholder="e.g. LRO-482" autocomplete="off"
+              class="flex-1 bg-[var(--bg-elevated)] text-sm uppercase tracking-widest font-semibold text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+            <button type="submit" class="px-4 py-2.5 rounded-xl accent-bg font-semibold text-xs hover:opacity-95 transition">
+              Join
+            </button>
+          </div>
+          <p id="lobbyErrorMsg" class="text-[11px] text-rose-400 hidden"></p>
+        </form>
+      </div>
+
+      <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Rooms automatically lock once 2 accounts connect</p>
+    </div>
+
+    <!-- ==================== 3. MAIN APP SHELL ==================== -->
+    <div id="mainApp" class="hidden flex-1 flex flex-col overflow-hidden">
+
+      <header class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full accent-bg"></span>
+          <span class="font-editorial text-2xl tracking-wide text-[var(--text-main)]">Lereio</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="openProfileBtn" class="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
+            <img id="headerMyAvatar" src="" class="w-6 h-6 rounded-full object-cover hidden" alt="Me">
+            <div id="headerMyInitial" class="w-6 h-6 rounded-full accent-soft-bg text-[11px] font-bold flex items-center justify-center">?</div>
+            <span id="headerMyName" class="text-xs text-[var(--text-main)] font-medium max-w-[85px] truncate">Set Name</span>
+            <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
+          </button>
+
+          <button id="openSettingsBtn" class="w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Space & Theme Settings">
+            <i class="fa-solid fa-sliders text-xs accent-text"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto no-scrollbar pb-24">
+
+        <!-- TAB 1: HOME / OVERVIEW -->
+        <section id="tab-home" class="p-5 space-y-4">
+          <div class="surface-card p-4 flex items-center justify-between">
+            <div class="space-y-0.5">
+              <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
+              <h1 class="font-editorial text-3xl text-[var(--text-main)]">
+                <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
+              </h1>
+              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
+            </div>
+
+            <div class="flex items-center -space-x-2.5 shrink-0">
+              <div id="heroMyAvatarWrap" onclick="document.getElementById('openProfileBtn').click()" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center cursor-pointer font-semibold text-sm accent-text" title="Edit your profile">
+                Me
+              </div>
+              <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
+                ♡
+              </div>
+            </div>
+          </div>
+
+          <div id="inviteBannerCard" class="surface-card p-4 flex items-center justify-between border border-dashed border-[var(--accent)]/50">
+            <div>
+              <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Waiting for Partner</p>
+              <p class="text-xs text-[var(--text-muted)] mt-0.5">Share your invite code to link accounts:</p>
+              <p id="displayInviteCode" class="text-lg font-bold tracking-widest text-[var(--text-main)] mt-1">LRO-000</p>
+            </div>
+            <button id="copyCodeBtn" class="px-3.5 py-2 rounded-xl accent-soft-bg text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copyCodeLabel">Copy</span>
+            </button>
+          </div>
+
+          <div class="surface-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-xl accent-soft-bg flex items-center justify-center">
+                  <i class="fa-solid fa-location-dot text-xs"></i>
+                </span>
+                <div>
+                  <p class="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold">Live Map & Distance</p>
+                  <p id="distanceHeadline" class="text-sm font-bold text-[var(--text-main)]">Tap update to pin location</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <button id="openMapBtn" class="hidden w-8 h-8 rounded-xl surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Open in Google Maps">
+                  <i class="fa-solid fa-diamond-turn-right text-xs"></i>
+                </button>
+                <button id="updateLocationBtn" class="px-3 py-1.5 rounded-xl accent-bg text-[11px] font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
+                  <i id="locSpinIcon" class="fa-solid fa-crosshairs text-[10px]"></i>
+                  <span>Update</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="miniMapWrapper" class="hidden relative">
+              <div id="miniMapContainer" class="border border-[var(--border-soft)]"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="surface-pill rounded-2xl p-3">
+                <p id="myLocNameLabel" class="text-[11px] font-semibold accent-text truncate">You</p>
+                <p id="myLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
+                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+              </div>
+              <div class="surface-pill rounded-2xl p-3">
+                <p id="partnerLocNameLabel" class="text-[11px] font-semibold accent-text truncate">Partner</p>
+                <p id="partnerLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
+                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="surface-card p-6 flex flex-col items-center text-center">
+            <div id="counterConfiguredView" class="w-full flex flex-col items-center">
+              <div class="relative w-40 h-40 flex items-center justify-center my-1">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-elevated)" stroke-width="8" />
+                  <circle id="yearProgressRing" cx="80" cy="80" r="68" fill="none" stroke="var(--accent)" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="427.25" stroke-dashoffset="120" class="transition-all duration-700" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="daysCount" class="font-editorial text-5xl text-[var(--text-main)] leading-none">0</span>
+                  <span class="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] mt-1.5">Days Together</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2.5 w-full mt-4">
+                <div class="surface-pill rounded-2xl py-2.5 px-2">
+                  <p id="weeksVal" class="text-base font-semibold text-[var(--text-main)]">0</p>
+                  <p class="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Weeks</p>
+                </div>
+                <div class="surface-pill rounded-2xl py-2.5 px-2">
+                  <p id="monthsVal" class="text-base font-semibold text-[var(--text-main)]">0</p>
+                  <p class="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Months</p>
+                </div>
+                <div class="surface-pill rounded-2xl py-2.5 px-2">
+                  <p id="yearsVal" class="text-base font-semibold text-[var(--text-main)]">0</p>
+                  <p class="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Years</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5 w-full mt-2.5 text-left">
+                <div class="surface-pill rounded-2xl p-3">
+                  <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
+                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                </div>
+                <div class="surface-pill rounded-2xl p-3">
+                  <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
+                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="counterUnsetView" class="hidden py-5 space-y-3">
+              <p class="font-editorial text-3xl text-[var(--text-main)]">Set Your Start Date</p>
+              <p class="text-xs text-[var(--text-muted)] max-w-[240px] mx-auto">Add your anniversary date to start your live day counter.</p>
+              <button onclick="document.getElementById('openSettingsBtn').click()" class="px-5 py-2.5 rounded-xl accent-bg text-xs font-semibold">
+                Choose Date
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: DIRECT CHAT -->
+        <section id="tab-chat" class="hidden h-full flex flex-col">
+          <div class="px-5 py-3 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
+              <div>
+                <h2 id="chatPartnerName" class="text-sm font-semibold text-[var(--text-main)]">Partner</h2>
+                <p id="chatPartnerSub" class="text-[11px] text-[var(--text-muted)]">Private Space</p>
+              </div>
+            </div>
+            <span id="chatRoomBadge" class="text-[10px] px-2.5 py-1 rounded-full accent-soft-bg font-semibold">LRO-000</span>
+          </div>
+
+          <div id="chatMessagesContainer" class="flex-1 overflow-y-auto no-scrollbar px-5 py-3 space-y-3"></div>
+
+          <form id="chatForm" class="p-3 bg-[var(--bg-card)] border-t border-[var(--border-soft)] flex items-center gap-2 shrink-0">
+            <label class="w-9 h-9 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer shrink-0">
+              <i class="fa-regular fa-image text-sm"></i>
+              <input id="chatImageInput" type="file" accept="image/*" class="hidden">
+            </label>
+            <input id="chatInput" type="text" placeholder="Write a message..." autocomplete="off"
+              class="flex-1 bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-full px-4 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+            <button type="submit" class="w-9 h-9 rounded-full accent-bg flex items-center justify-center shrink-0 hover:opacity-90 transition">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+          </form>
+        </section>
+
+        <!-- TAB 3: SHARED GALLERY -->
+        <section id="tab-memories" class="hidden p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="font-editorial text-3xl text-[var(--text-main)]">Shared Gallery</h2>
+              <p class="text-xs text-[var(--text-muted)]">Private snapshots & albums</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="newAlbumBtn" class="w-9 h-9 rounded-xl surface-pill flex items-center justify-center accent-text" title="New Album">
+                <i class="fa-solid fa-folder-plus text-xs"></i>
+              </button>
+              <label class="px-3.5 py-2 rounded-xl accent-bg font-semibold text-xs flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Upload</span>
+                <input id="memoryPhotoInput" type="file" accept="image/*" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <div id="latestMemoryHero" class="hidden relative rounded-2xl overflow-hidden border border-[var(--border-soft)] h-44">
+            <img id="latestMemoryImg" src="" class="w-full h-full object-cover" alt="Latest">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+              <span class="text-[10px] uppercase tracking-widest accent-text font-semibold">Latest Highlight</span>
+              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">—</p>
+            </div>
+          </div>
+
+          <div id="albumFilterBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
+          <div id="memoriesGrid" class="grid grid-cols-2 gap-3"></div>
+        </section>
+
+        <!-- TAB 4: SHARED NOTES / WALL -->
+        <section id="tab-feed" class="hidden p-5 space-y-4">
+          <div class="surface-card p-4 space-y-3">
+            <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
+              class="w-full bg-transparent text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] resize-none focus:outline-none"></textarea>
+            <div class="flex items-center justify-between pt-2 border-t border-[var(--border-soft)]">
+              <span class="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
+                <i class="fa-solid fa-lock text-[10px] accent-text"></i> Only the two of you can see this
+              </span>
+              <button id="createPostBtn" class="px-4 py-1.5 rounded-full accent-bg text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
+                <i class="fa-solid fa-paper-plane text-[10px]"></i> Post
+              </button>
+            </div>
+          </div>
+
+          <div id="feedPostsList" class="space-y-3"></div>
+        </section>
+
+      </main>
+
+      <nav style="background-color: var(--nav-bg);" class="absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 py-2.5 flex items-center justify-between z-20">
+        <button data-tab="home" class="nav-btn flex flex-col items-center gap-1 accent-text">
+          <i class="fa-solid fa-house text-base"></i>
+          <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button data-tab="chat" class="nav-btn flex flex-col items-center gap-1 text-[var(--text-muted)]">
+          <i class="fa-regular fa-comment-dots text-base"></i>
+          <span class="text-[10px] font-medium">Chat</span>
+        </button>
+        <button data-tab="memories" class="nav-btn flex flex-col items-center gap-1 text-[var(--text-muted)]">
+          <i class="fa-regular fa-images text-base"></i>
+          <span class="text-[10px] font-medium">Gallery</span>
+        </button>
+        <button data-tab="feed" class="nav-btn flex flex-col items-center gap-1 text-[var(--text-muted)]">
+          <i class="fa-solid fa-feather-pointed text-base"></i>
+          <span class="text-[10px] font-medium">Notes</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- PROFILE EDIT MODAL -->
+    <div id="profileModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
+      <div class="surface-card w-full max-w-sm p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-editorial text-3xl text-[var(--text-main)]">Your Profile</h3>
+          <button onclick="document.getElementById('profileModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex flex-col items-center gap-2 pt-1">
+          <div id="modalAvatarPreview" class="w-20 h-20 rounded-2xl surface-pill border border-[var(--accent)]/40 overflow-hidden flex items-center justify-center text-2xl font-bold accent-text">
+            ?
+          </div>
+          <label class="text-xs accent-text cursor-pointer hover:underline flex items-center gap-1.5">
+            <i class="fa-solid fa-camera"></i>
+            <span>Upload Photo</span>
+            <input id="profilePhotoInput" type="file" accept="image/*" class="hidden">
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-xs text-[var(--text-muted)] mb-1.5">Your Nickname</label>
+          <input id="profileNameInput" type="text" placeholder="e.g., Zain or Cheng"
+            class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
+        </div>
+
+        <button id="saveProfileBtn" class="w-full py-2.5 rounded-xl accent-bg font-semibold text-sm hover:opacity-90 transition">
+          Save Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- SPACE & THEME SETTINGS MODAL -->
+    <div id="settingsModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
+      <div class="surface-card w-full max-w-sm p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-editorial text-3xl text-[var(--text-main)]">Space & Theme</h3>
+          <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs text-[var(--text-muted)] mb-2">Appearance Mode</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="modeDarkBtn" class="py-2 rounded-xl surface-pill text-xs font-semibold flex items-center justify-center gap-2 border border-transparent">
+              <i class="fa-solid fa-moon"></i>
+              <span>Dark (Default)</span>
+            </button>
+            <button type="button" id="modeLightBtn" class="py-2 rounded-xl surface-pill text-xs font-semibold flex items-center justify-center gap-2 border border-transparent">
+              <i class="fa-solid fa-sun"></i>
+              <span>Light</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-[var(--text-muted)] mb-2">Accent Color</label>
+          <div class="grid grid-cols-4 gap-2" id="themePickerGrid">
+            <button type="button" data-theme="blue" class="theme-choice flex flex-col items-center gap-1.5 p-2 rounded-xl surface-pill border border-transparent">
+              <span class="w-5 h-5 rounded-full bg-[#60a5fa]"></span>
+              <span class="text-[11px] text-[var(--text-main)]">Blue</span>
+            </button>
+            <button type="button" data-theme="rose" class="theme-choice flex flex-col items-center gap-1.5 p-2 rounded-xl surface-pill border border-transparent">
+              <span class="w-5 h-5 rounded-full bg-[#f472b6]"></span>
+              <span class="text-[11px] text-[var(--text-main)]">Rose</span>
+            </button>
+            <button type="button" data-theme="emerald" class="theme-choice flex flex-col items-center gap-1.5 p-2 rounded-xl surface-pill border border-transparent">
+              <span class="w-5 h-5 rounded-full bg-[#34d399]"></span>
+              <span class="text-[11px] text-[var(--text-main)]">Green</span>
+            </button>
+            <button type="button" data-theme="amber" class="theme-choice flex flex-col items-center gap-1.5 p-2 rounded-xl surface-pill border border-transparent">
+              <span class="w-5 h-5 rounded-full bg-[#fbbf24]"></span>
+              <span class="text-[11px] text-[var(--text-main)]">Amber</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-[var(--text-muted)] mb-1.5">Anniversary / Start Date</label>
+          <input id="anniversaryInput" type="date" class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
+        </div>
+
+        <button id="saveSettingsBtn" class="w-full py-2.5 rounded-xl accent-bg font-semibold text-sm hover:opacity-90 transition">
+          Save Changes
+        </button>
+
+        <div class="pt-2 border-t border-[var(--border-soft)] flex justify-between items-center text-[11px]">
+          <span class="text-[var(--text-muted)]">Code: <strong id="settingsCodeLabel" class="text-[var(--text-main)]">---</strong></span>
+          <div class="flex items-center gap-3">
+            <button id="unlinkSpaceBtn" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">Unlink</button>
+            <button id="signOutBtn" class="text-rose-400 hover:underline font-medium">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== FIREBASE + NATIVE CAPACITOR GOOGLE AUTH ==================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential,
+      onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+      collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, arrayUnion, arrayRemove
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAEQMIwaW5bvh0-7SlqSsoBk3UO6zPZw8w",
+      authDomain: "solace-couple.firebaseapp.com",
+      projectId: "solace-couple",
+      storageBucket: "solace-couple.firebasestorage.app",
+      messagingSenderId: "625861224922",
+      appId: "1:625861224922:web:04877017f1f2d04b67b8e3"
+    };
+
+    const WEB_CLIENT_ID = "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.());
+
+    if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+      window.Capacitor.Plugins.GoogleAuth.initialize({
+        clientId: WEB_CLIENT_ID,
+        scopes: ["profile", "email"],
+        grantOfflineAccess: true
+      });
+    }
+
+    const LOCAL_MODE_KEY = "lereio_appearance_mode_v1";
+    const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
+
+    const ACCENTS = {
+      blue:    { dark: "#60a5fa", darkContrast: "#08111e", light: "#2563eb", lightContrast: "#ffffff", soft: "rgba(96, 165, 250, 0.14)", glow: "rgba(96, 165, 250, 0.11)" },
+      rose:    { dark: "#f472b6", darkContrast: "#1a0811", light: "#db2777", lightContrast: "#ffffff", soft: "rgba(244, 114, 182, 0.14)", glow: "rgba(244, 114, 182, 0.11)" },
+      emerald: { dark: "#34d399", darkContrast: "#061a12", light: "#059669", lightContrast: "#ffffff", soft: "rgba(52, 211, 153, 0.14)", glow: "rgba(52, 211, 153, 0.11)" },
+      amber:   { dark: "#fbbf24", darkContrast: "#1c1304", light: "#d97706", lightContrast: "#ffffff", soft: "rgba(251, 191, 36, 0.14)", glow: "rgba(251, 191, 36, 0.11)" }
+    };
+
+    let currentUser = null;
+    let activeRoomCode = "";
+    let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
+    let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
+
+    let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [] };
+    let membersMap = {};
+    let allMemories = [];
+    let selectedAlbum = "All";
+    let pendingAvatarBase64 = null;
+    let unsubscribers = [];
+
+    let leafletMap = null;
+    let leafletTileLayer = null;
+    let mapMarkersLayer = null;
+
+    function applyAppearance(mode, accentKey) {
+      const prevMode = currentMode;
+      currentMode = mode === "light" ? "light" : "dark";
+      currentAccent = accentKey in ACCENTS ? accentKey : "blue";
+      localStorage.setItem(LOCAL_MODE_KEY, currentMode);
+      localStorage.setItem(LOCAL_THEME_KEY, currentAccent);
+
+      const acc = ACCENTS[currentAccent];
+      const root = document.documentElement.style;
+
+      if (currentMode === "light") {
+        root.setProperty("--bg-outer", "#e2e8f0");
+        root.setProperty("--bg-base", "#f8fafc");
+        root.setProperty("--bg-card", "#ffffff");
+        root.setProperty("--bg-elevated", "#f1f5f9");
+        root.setProperty("--nav-bg", "rgba(255, 255, 255, 0.94)");
+        root.setProperty("--text-main", "#0f172a");
+        root.setProperty("--text-muted", "#64748b");
+        root.setProperty("--border-soft", "rgba(15, 23, 42, 0.10)");
+        root.setProperty("--accent", acc.light);
+        root.setProperty("--accent-contrast", acc.lightContrast);
+      } else {
+        root.setProperty("--bg-outer", "#07090e");
+        root.setProperty("--bg-base", "#0c1018");
+        root.setProperty("--bg-card", "#131926");
+        root.setProperty("--bg-elevated", "#1b2436");
+        root.setProperty("--nav-bg", "rgba(19, 25, 38, 0.94)");
+        root.setProperty("--text-main", "#f1f5f9");
+        root.setProperty("--text-muted", "#8b9bb4");
+        root.setProperty("--border-soft", "rgba(148, 163, 184, 0.14)");
+        root.setProperty("--accent", acc.dark);
+        root.setProperty("--accent-contrast", acc.darkContrast);
+      }
+
+      root.setProperty("--accent-soft", acc.soft);
+      root.setProperty("--accent-glow", acc.glow);
+
+      const activeColor = currentMode === "light" ? acc.light : acc.dark;
+      document.getElementById("modeDarkBtn").style.borderColor = currentMode === "dark" ? activeColor : "transparent";
+      document.getElementById("modeLightBtn").style.borderColor = currentMode === "light" ? activeColor : "transparent";
+
+      document.querySelectorAll(".theme-choice").forEach((btn) => {
+        btn.style.borderColor = btn.dataset.theme === currentAccent ? activeColor : "transparent";
+      });
+
+      if (leafletMap && prevMode !== currentMode) {
+        updateMapTiles();
+      }
+    }
+
+    applyAppearance(currentMode, currentAccent);
+
+    document.getElementById("modeDarkBtn").addEventListener("click", () => applyAppearance("dark", currentAccent));
+    document.getElementById("modeLightBtn").addEventListener("click", () => applyAppearance("light", currentAccent));
+    document.querySelectorAll(".theme-choice").forEach((btn) => {
+      btn.addEventListener("click", () => applyAppearance(currentMode, btn.dataset.theme));
+    });
+
+    function generateInviteCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "LRO-";
+      for (let i = 0; i < 3; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return code;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    function compressImage(file, maxWidth = 650, quality = 0.72) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function clearListeners() {
+      unsubscribers.forEach((unsub) => unsub());
+      unsubscribers = [];
+    }
+
+    function closeAllModals() {
+      document.getElementById("settingsModal").classList.add("hidden");
+      document.getElementById("profileModal").classList.add("hidden");
+    }
+
+    // ==================== GOOGLE AUTHENTICATION (NATIVE ANDROID + WEB) ====================
+    document.getElementById("googleSignInBtn").addEventListener("click", async () => {
+      const errEl = document.getElementById("authErrorMsg");
+      const labelEl = document.getElementById("googleSignInLabel");
+      errEl.classList.add("hidden");
+      labelEl.textContent = "Signing in...";
+
+      try {
+        if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+          const googleUser = await window.Capacitor.Plugins.GoogleAuth.signIn();
+          const idToken = googleUser?.authentication?.idToken;
+          if (!idToken) throw new Error("No ID token returned from Google.");
+          const credential = GoogleAuthProvider.credential(idToken);
+          await signInWithCredential(auth, credential);
+        } else {
+          await signInWithPopup(auth, provider);
+        }
+      } catch (err) {
+        errEl.textContent = err?.message || JSON.stringify(err);
+        errEl.classList.remove("hidden");
+      } finally {
+        labelEl.textContent = "Continue with Google";
+      }
+    });
+
+    const handleSignOut = async () => {
+      closeAllModals();
+      clearListeners();
+      activeRoomCode = "";
+      if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
+        try { await window.Capacitor.Plugins.GoogleAuth.signOut(); } catch (_) {}
+      }
+      await signOut(auth);
+    };
+
+    document.getElementById("signOutBtn").addEventListener("click", handleSignOut);
+    document.getElementById("lobbySignOutBtn").addEventListener("click", handleSignOut);
+
+    onAuthStateChanged(auth, async (user) => {
+      closeAllModals();
+      if (!user) {
+        currentUser = null;
+        activeRoomCode = "";
+        clearListeners();
+        document.getElementById("lobbyScreen").classList.add("hidden");
+        document.getElementById("mainApp").classList.add("hidden");
+        document.getElementById("authScreen").classList.remove("hidden");
+        return;
+      }
+
+      currentUser = user;
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          roomCode: ""
+        });
+        showLobby();
+        return;
+      }
+
+      const savedRoom = userSnap.data().roomCode;
+      if (savedRoom) {
+        await enterRoom(savedRoom, false);
+      } else {
+        showLobby();
+      }
+    });
+
+    // ==================== CREATE / JOIN SPACE LOBBY ====================
+    function showLobby() {
+      closeAllModals();
+      clearListeners();
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("mainApp").classList.add("hidden");
+      document.getElementById("lobbyScreen").classList.remove("hidden");
+      document.getElementById("lobbyWelcomeUser").textContent = `Hi, ${currentUser.displayName || currentUser.email}`;
+    }
+
+    document.getElementById("createSpaceBtn").addEventListener("click", async () => {
+      if (!currentUser) return;
+      const btn = document.getElementById("createSpaceBtn");
+      btn.disabled = true;
+      btn.textContent = "Generating...";
+
+      try {
+        const code = generateInviteCode();
+        await setDoc(doc(db, "rooms", code), {
+          code,
+          startDate: "",
+          theme: currentAccent,
+          albums: ["All", "Moments", "Selfies", "Dates"],
+          memberUids: [currentUser.uid],
+          createdAt: serverTimestamp()
+        });
+
+        await setDoc(doc(db, "rooms", code, "members", currentUser.uid), {
+          uid: currentUser.uid,
+          name: currentUser.displayName ? currentUser.displayName.split(" ")[0] : "",
+          photo: currentUser.photoURL || "",
+          location: null
+        });
+
+        await updateDoc(doc(db, "users", currentUser.uid), { roomCode: code });
+        await enterRoom(code, true);
+      } catch (err) {
+        alert("Could not create space: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-plus"></i><span>Generate Invite Code</span>`;
+      }
+    });
+
+    document.getElementById("joinSpaceForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+      const errEl = document.getElementById("lobbyErrorMsg");
+      errEl.classList.add("hidden");
+
+      let raw = document.getElementById("joinCodeInput").value.trim().toUpperCase();
+      if (!raw) return;
+      if (!raw.startsWith("LRO-") && !raw.startsWith("SLC-") && raw.length === 3) raw = "LRO-" + raw;
+
+      const roomRef = doc(db, "rooms", raw);
+      const snap = await getDoc(roomRef);
+
+      if (!snap.exists()) {
+        errEl.textContent = "Code not found. Check with your partner and try again.";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      const data = snap.data();
+      const members = data.memberUids || [];
+
+      if (!members.includes(currentUser.uid) && members.length >= 2) {
+        errEl.textContent = "This space is already locked between two people.";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      let isNewMember = false;
+      if (!members.includes(currentUser.uid)) {
+        isNewMember = true;
+        await updateDoc(roomRef, { memberUids: arrayUnion(currentUser.uid) });
+        await setDoc(doc(db, "rooms", raw, "members", currentUser.uid), {
+          uid: currentUser.uid,
+          name: currentUser.displayName ? currentUser.displayName.split(" ")[0] : "",
+          photo: currentUser.photoURL || "",
+          location: null
+        });
+      }
+
+      await updateDoc(doc(db, "users", currentUser.uid), { roomCode: raw });
+      await enterRoom(raw, isNewMember);
+    });
+
+    async function enterRoom(code, promptProfileSetup) {
+      const snap = await getDoc(doc(db, "rooms", code));
+      if (!snap.exists()) {
+        await updateDoc(doc(db, "users", currentUser.uid), { roomCode: "" });
+        showLobby();
+        return;
+      }
+
+      activeRoomCode = code;
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("lobbyScreen").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+
+      document.getElementById("displayInviteCode").textContent = code;
+      document.getElementById("settingsCodeLabel").textContent = code;
+      document.getElementById("chatRoomBadge").textContent = code;
+
+      startRoomListeners(code);
+
+      if (promptProfileSetup) {
+        setTimeout(() => openProfileEditor(), 350);
+      }
+    }
+
+    document.getElementById("unlinkSpaceBtn").addEventListener("click", async () => {
+      if (!confirm("Unlink from this room and return to the Create / Join lobby?")) return;
+      closeAllModals();
+      if (activeRoomCode && currentUser) {
+        try {
+          await updateDoc(doc(db, "rooms", activeRoomCode), { memberUids: arrayRemove(currentUser.uid) });
+          await updateDoc(doc(db, "users", currentUser.uid), { roomCode: "" });
+        } catch (_) {}
+      }
+      activeRoomCode = "";
+      membersMap = {};
+      allMemories = [];
+      showLobby();
+    });
+
+    document.getElementById("copyCodeBtn").addEventListener("click", () => {
+      navigator.clipboard?.writeText(activeRoomCode);
+      const lbl = document.getElementById("copyCodeLabel");
+      lbl.textContent = "Copied!";
+      setTimeout(() => (lbl.textContent = "Copy"), 1800);
+    });
+
+    // ==================== REAL-TIME ROOM LISTENERS ====================
+    function startRoomListeners(code) {
+      clearListeners();
+
+      unsubscribers.push(onSnapshot(doc(db, "rooms", code), (snap) => {
+        if (snap.exists()) {
+          spaceData = { ...spaceData, ...snap.data() };
+          if (spaceData.theme) applyAppearance(currentMode, spaceData.theme);
+          updateHomeCounters();
+          renderMemories();
+        }
+      }));
+
+      unsubscribers.push(onSnapshot(collection(db, "rooms", code, "members"), (snap) => {
+        membersMap = {};
+        snap.forEach((d) => { membersMap[d.id] = d.data(); });
+        renderProfilesAndMap();
+      }));
+
+      const chatQ = query(collection(db, "rooms", code, "messages"), orderBy("createdAt", "asc"));
+      unsubscribers.push(onSnapshot(chatQ, (snap) => {
+        const msgs = [];
+        snap.forEach((d) => msgs.push({ id: d.id, ...d.data() }));
+        renderChat(msgs);
+      }));
+
+      const memQ = query(collection(db, "rooms", code, "memories"), orderBy("createdAt", "desc"));
+      unsubscribers.push(onSnapshot(memQ, (snap) => {
+        allMemories = [];
+        snap.forEach((d) => allMemories.push({ id: d.id, ...d.data() }));
+        renderMemories();
+      }));
+
+      const feedQ = query(collection(db, "rooms", code, "posts"), orderBy("createdAt", "desc"));
+      unsubscribers.push(onSnapshot(feedQ, (snap) => {
+        const posts = [];
+        snap.forEach((d) => posts.push({ id: d.id, ...d.data() }));
+        renderFeed(posts);
+      }));
+    }
+
+    function getMyProfile() {
+      return membersMap[currentUser?.uid] || { name: "", photo: "", location: null };
+    }
+
+    function getPartnerProfile() {
+      const partnerId = Object.keys(membersMap).find((id) => id !== currentUser?.uid);
+      return partnerId ? membersMap[partnerId] : null;
+    }
+
+    // ==================== INTERACTIVE MINI-MAP & DISTANCE ====================
+    function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function formatTimeAgo(ts) {
+      if (!ts) return "—";
+      const diffMins = Math.floor((Date.now() - ts) / 60000);
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const hrs = Math.floor(diffMins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    function updateMapTiles() {
+      if (!leafletMap) return;
+      if (leafletTileLayer) leafletMap.removeLayer(leafletTileLayer);
+      leafletTileLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        className: currentMode === "dark" ? "dark-osm-tiles" : ""
+      }).addTo(leafletMap);
+    }
+
+    function createAvatarDivIcon(profile, fallbackChar) {
+      const inner = profile?.photo
+        ? `<img src="${profile.photo}" alt="Pin">`
+        : escapeHtml((profile?.name || fallbackChar)[0].toUpperCase());
+      return L.divIcon({
+        className: "",
+        html: `<div class="avatar-pin">${inner}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+    }
+
+    function renderInteractiveMap(me, partner) {
+      const wrapper = document.getElementById("miniMapWrapper");
+      const hasMyLoc = Boolean(me?.location);
+      const hasPartnerLoc = Boolean(partner?.location);
+
+      if (!hasMyLoc && !hasPartnerLoc) {
+        wrapper.classList.add("hidden");
+        return;
+      }
+
+      wrapper.classList.remove("hidden");
+
+      if (!leafletMap) {
+        leafletMap = L.map("miniMapContainer", {
+          zoomControl: false,
+          attributionControl: false
+        });
+        updateMapTiles();
+        mapMarkersLayer = L.layerGroup().addTo(leafletMap);
+      }
+
+      setTimeout(() => leafletMap.invalidateSize(), 120);
+      mapMarkersLayer.clearLayers();
+
+      const points = [];
+
+      if (hasMyLoc) {
+        const pt = [me.location.lat, me.location.lng];
+        points.push(pt);
+        L.marker(pt, { icon: createAvatarDivIcon(me, "M") }).addTo(mapMarkersLayer);
+      }
+
+      if (hasPartnerLoc) {
+        const pt = [partner.location.lat, partner.location.lng];
+        points.push(pt);
+        L.marker(pt, { icon: createAvatarDivIcon(partner, "P") }).addTo(mapMarkersLayer);
+      }
+
+      if (points.length === 2) {
+        const accentHex = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#60a5fa";
+        L.polyline(points, {
+          color: accentHex,
+          weight: 2.5,
+          dashArray: "6, 6",
+          opacity: 0.85
+        }).addTo(mapMarkersLayer);
+        leafletMap.fitBounds(L.latLngBounds(points), { padding: [36, 36], maxZoom: 15 });
+      } else if (points.length === 1) {
+        leafletMap.setView(points[0], 14);
+      }
+    }
+
+    function renderProfilesAndMap() {
+      const me = getMyProfile();
+      const partner = getPartnerProfile();
+
+      document.getElementById("headerMyName").textContent = me.name || "Set Name";
+      const headerImg = document.getElementById("headerMyAvatar");
+      const headerInit = document.getElementById("headerMyInitial");
+      if (me.photo) {
+        headerImg.src = me.photo;
+        headerImg.classList.remove("hidden");
+        headerInit.classList.add("hidden");
+      } else {
+        headerImg.classList.add("hidden");
+        headerInit.classList.remove("hidden");
+        headerInit.textContent = (me.name || "?")[0].toUpperCase();
+      }
+
+      document.getElementById("myDisplayNameHero").textContent = me.name || "You";
+      document.getElementById("partnerDisplayNameHero").textContent = partner?.name || "Partner";
+
+      const myWrap = document.getElementById("heroMyAvatarWrap");
+      myWrap.innerHTML = me.photo
+        ? `<img src="${me.photo}" class="w-full h-full object-cover">`
+        : escapeHtml((me.name || "Me")[0].toUpperCase());
+
+      const partnerWrap = document.getElementById("heroPartnerAvatarWrap");
+      const chatPartnerAvatar = document.getElementById("chatPartnerAvatarWrap");
+      const inviteBanner = document.getElementById("inviteBannerCard");
+
+      if (partner) {
+        inviteBanner.classList.add("hidden");
+        document.getElementById("chatPartnerName").textContent = partner.name || "Partner";
+        document.getElementById("chatPartnerSub").textContent = "Connected in Lereio";
+        document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
+        const pHtml = partner.photo
+          ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
+          : escapeHtml((partner.name || "♡")[0].toUpperCase());
+        partnerWrap.innerHTML = pHtml;
+        chatPartnerAvatar.innerHTML = pHtml;
+      } else {
+        inviteBanner.classList.remove("hidden");
+        document.getElementById("chatPartnerName").textContent = "Waiting for partner...";
+        document.getElementById("chatPartnerSub").textContent = `Share code ${activeRoomCode}`;
+        partnerWrap.innerHTML = `♡`;
+        chatPartnerAvatar.innerHTML = `♡`;
+      }
+
+      document.getElementById("myLocNameLabel").textContent = me.name || "You";
+      document.getElementById("partnerLocNameLabel").textContent = partner?.name || "Partner";
+
+      if (me.location) {
+        document.getElementById("myLocPlaceText").textContent = me.location.place || "Pinned";
+        document.getElementById("myLocTimeText").textContent = formatTimeAgo(me.location.updatedAt);
+      } else {
+        document.getElementById("myLocPlaceText").textContent = "Not shared yet";
+        document.getElementById("myLocTimeText").textContent = "—";
+      }
+
+      if (partner?.location) {
+        document.getElementById("partnerLocPlaceText").textContent = partner.location.place || "Pinned";
+        document.getElementById("partnerLocTimeText").textContent = formatTimeAgo(partner.location.updatedAt);
+      } else {
+        document.getElementById("partnerLocPlaceText").textContent = "Not shared yet";
+        document.getElementById("partnerLocTimeText").textContent = "—";
+      }
+
+      const distHeadline = document.getElementById("distanceHeadline");
+      const openMapBtn = document.getElementById("openMapBtn");
+
+      if (me.location && partner?.location) {
+        const km = calculateDistanceKm(me.location.lat, me.location.lng, partner.location.lat, partner.location.lng);
+        if (km < 0.15) distHeadline.textContent = "Right next to each other ♡";
+        else if (km < 1) distHeadline.textContent = `${Math.round(km * 1000)} meters apart`;
+        else distHeadline.textContent = `${km.toFixed(1)} km apart`;
+
+        openMapBtn.classList.remove("hidden");
+        openMapBtn.onclick = () => {
+          window.open(`https://www.google.com/maps/dir/${me.location.lat},${me.location.lng}/${partner.location.lat},${partner.location.lng}`, "_blank");
+        };
+      } else if (partner?.location) {
+        distHeadline.textContent = `${partner.name || "Partner"} pinned location`;
+        openMapBtn.classList.remove("hidden");
+        openMapBtn.onclick = () => {
+          window.open(`https://www.google.com/maps?q=${partner.location.lat},${partner.location.lng}`, "_blank");
+        };
+      } else if (me.location) {
+        distHeadline.textContent = "Waiting for partner's pin";
+        openMapBtn.classList.add("hidden");
+      } else {
+        distHeadline.textContent = "Tap update to pin location";
+        openMapBtn.classList.add("hidden");
+      }
+
+      renderInteractiveMap(me, partner);
+    }
+
+    document.getElementById("updateLocationBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) return alert("Location is not supported on this device.");
+      const icon = document.getElementById("locSpinIcon");
+      icon.classList.add("fa-spin");
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          let place = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+            const geo = await res.json();
+            const addr = geo.address || {};
+            place = addr.suburb || addr.neighbourhood || addr.village || addr.city || addr.town || addr.county || place;
+          } catch (_) {}
+
+          await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+            location: { lat, lng, place, updatedAt: Date.now() }
+          });
+          icon.classList.remove("fa-spin");
+        },
+        (err) => {
+          icon.classList.remove("fa-spin");
+          alert("Please allow location permission: " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    // ==================== HOME DAY COUNTER ====================
+    function updateHomeCounters() {
+      const now = new Date();
+      const hour = now.getHours();
+      let greeting = "Good evening";
+      if (hour < 12) greeting = "Good morning";
+      else if (hour < 18) greeting = "Good afternoon";
+
+      document.getElementById("greetingTime").textContent = greeting;
+      document.getElementById("liveDateText").textContent = now.toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric"
+      });
+
+      if (!spaceData.startDate) {
+        document.getElementById("counterConfiguredView").classList.add("hidden");
+        document.getElementById("counterUnsetView").classList.remove("hidden");
+        return;
+      }
+
+      document.getElementById("counterConfiguredView").classList.remove("hidden");
+      document.getElementById("counterUnsetView").classList.add("hidden");
+
+      const start = new Date(spaceData.startDate + "T00:00:00");
+      const diffMs = Math.max(0, now - start);
+      const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const weeks = Math.floor(totalDays / 7);
+      const months = Math.floor(totalDays / 30.4375);
+      const years = Math.floor(totalDays / 365.25);
+
+      document.getElementById("daysCount").textContent = totalDays;
+      document.getElementById("weeksVal").textContent = weeks;
+      document.getElementById("monthsVal").textContent = months;
+      document.getElementById("yearsVal").textContent = years;
+
+      const daysIntoYear = totalDays % 365;
+      const circumference = 427.25;
+      document.getElementById("yearProgressRing").style.strokeDashoffset = circumference - (daysIntoYear / 365) * circumference;
+
+      let nextAnniv = new Date(now.getFullYear(), start.getMonth(), start.getDate());
+      if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
+      const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
+      document.getElementById("anniversaryCountdown").textContent =
+        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} days`;
+
+      let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
+      if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
+      const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
+      document.getElementById("monthsaryCountdown").textContent =
+        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} days`;
+    }
+
+    setInterval(updateHomeCounters, 15000);
+
+    // ==================== MODALS ====================
+    function openProfileEditor() {
+      const me = getMyProfile();
+      pendingAvatarBase64 = me.photo || "";
+      document.getElementById("profileNameInput").value = me.name || "";
+      const prev = document.getElementById("modalAvatarPreview");
+      prev.innerHTML = pendingAvatarBase64
+        ? `<img src="${pendingAvatarBase64}" class="w-full h-full object-cover">`
+        : escapeHtml((me.name || "?")[0].toUpperCase());
+      document.getElementById("profileModal").classList.remove("hidden");
+    }
+
+    document.getElementById("openProfileBtn").addEventListener("click", openProfileEditor);
+
+    document.getElementById("profilePhotoInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      pendingAvatarBase64 = await compressImage(file, 320, 0.78);
+      document.getElementById("modalAvatarPreview").innerHTML =
+        `<img src="${pendingAvatarBase64}" class="w-full h-full object-cover">`;
+    });
+
+    document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+      const newName = document.getElementById("profileNameInput").value.trim();
+      if (!newName) return alert("Please enter your nickname.");
+      await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+        name: newName,
+        photo: pendingAvatarBase64 || ""
+      });
+      document.getElementById("profileModal").classList.add("hidden");
+    });
+
+    document.getElementById("openSettingsBtn").addEventListener("click", () => {
+      document.getElementById("anniversaryInput").value = spaceData.startDate || "";
+      applyAppearance(currentMode, currentAccent);
+      document.getElementById("settingsModal").classList.remove("hidden");
+    });
+
+    document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+      const startDate = document.getElementById("anniversaryInput").value;
+      await updateDoc(doc(db, "rooms", activeRoomCode), {
+        startDate,
+        theme: currentAccent
+      });
+      document.getElementById("settingsModal").classList.add("hidden");
+    });
+
+    // ==================== BOTTOM ICON NAVIGATION ====================
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tabName = btn.dataset.tab;
+        ["home", "chat", "memories", "feed"].forEach((t) => {
+          document.getElementById(`tab-${t}`).classList.add("hidden");
+        });
+        document.querySelectorAll(".nav-btn").forEach((b) => {
+          b.classList.remove("accent-text");
+          b.classList.add("text-[var(--text-muted)]");
+        });
+
+        const activeSec = document.getElementById(`tab-${tabName}`);
+        activeSec.classList.remove("hidden");
+        if (tabName === "home" && leafletMap) {
+          setTimeout(() => leafletMap.invalidateSize(), 100);
+        }
+        if (tabName === "chat") {
+          activeSec.classList.add("flex");
+          const c = document.getElementById("chatMessagesContainer");
+          c.scrollTop = c.scrollHeight;
+        }
+        btn.classList.remove("text-[var(--text-muted)]");
+        btn.classList.add("accent-text");
+      });
+    });
+
+    // ==================== CHAT ====================
+    function renderChat(messages) {
+      const container = document.getElementById("chatMessagesContainer");
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center px-6 opacity-75">
+            <i class="fa-regular fa-paper-plane text-xl accent-text mb-2"></i>
+            <p class="font-editorial text-2xl text-[var(--text-main)]">No messages yet</p>
+            <p class="text-xs text-[var(--text-muted)] mt-1">Say hi to start your private conversation.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map((msg) => {
+        const isMe = msg.senderUid === currentUser.uid;
+        const senderProf = membersMap[msg.senderUid] || { name: "Partner", photo: "" };
+        const timeStr = msg.createdAt?.toDate
+          ? msg.createdAt.toDate().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+          : "Sending...";
+
+        if (isMe) {
+          return `
+            <div class="flex flex-col items-end">
+              ${msg.image
+                ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
+                : `<div class="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm accent-bg text-sm font-medium">${escapeHtml(msg.text)}</div>`
+              }
+              <span class="text-[10px] text-[var(--text-muted)] mt-1 pr-1">${timeStr}</span>
+            </div>
+          `;
+        } else {
+          const avatarHtml = senderProf.photo
+            ? `<img src="${senderProf.photo}" class="w-6 h-6 rounded-full object-cover shrink-0 mb-4">`
+            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "♡")[0].toUpperCase())}</div>`;
+
+          return `
+            <div class="flex items-end gap-2">
+              ${avatarHtml}
+              <div class="flex flex-col items-start">
+                ${msg.image
+                  ? `<img src="${msg.image}" class="max-w-[210px] rounded-2xl border border-[var(--border-soft)] mb-1">`
+                  : `<div class="max-w-[240px] px-4 py-2.5 rounded-2xl rounded-bl-sm surface-card text-[var(--text-main)] text-sm">${escapeHtml(msg.text)}</div>`
+                }
+                <span class="text-[10px] text-[var(--text-muted)] mt-1 pl-1">${timeStr}</span>
+              </div>
+            </div>
+          `;
+        }
+      }).join("");
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    document.getElementById("chatForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
+        senderUid: currentUser.uid,
+        text,
+        createdAt: serverTimestamp()
+      });
+    });
+
+    document.getElementById("chatImageInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const base64 = await compressImage(file, 650, 0.72);
+      await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
+        senderUid: currentUser.uid,
+        image: base64,
+        createdAt: serverTimestamp()
+      });
+    });
+
+    // ==================== GALLERY ====================
+    function renderMemories() {
+      const albums = spaceData.albums || ["All", "Moments", "Selfies", "Dates"];
+      const filterBar = document.getElementById("albumFilterBar");
+
+      filterBar.innerHTML = albums.map((album) => {
+        const count = album === "All"
+          ? allMemories.length
+          : allMemories.filter((m) => m.album === album).length;
+        const active = selectedAlbum === album;
+        return `
+          <button data-album="${escapeHtml(album)}"
+            class="album-pill px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition ${active ? "accent-bg font-semibold" : "surface-pill text-[var(--text-muted)]"}">
+            ${escapeHtml(album)} · ${count}
+          </button>
+        `;
+      }).join("");
+
+      filterBar.querySelectorAll(".album-pill").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedAlbum = btn.dataset.album;
+          renderMemories();
+        });
+      });
+
+      const heroCard = document.getElementById("latestMemoryHero");
+      if (allMemories.length > 0) {
+        heroCard.classList.remove("hidden");
+        document.getElementById("latestMemoryImg").src = allMemories[0].url;
+        document.getElementById("latestMemoryCaption").textContent = allMemories[0].caption;
+      } else {
+        heroCard.classList.add("hidden");
+      }
+
+      const filtered = selectedAlbum === "All"
+        ? allMemories
+        : allMemories.filter((m) => m.album === selectedAlbum);
+
+      const grid = document.getElementById("memoriesGrid");
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 surface-card p-8 text-center space-y-1.5">
+            <i class="fa-regular fa-images text-xl accent-text"></i>
+            <p class="font-editorial text-2xl text-[var(--text-main)]">No photos yet</p>
+            <p class="text-xs text-[var(--text-muted)]">Tap "Upload" above to add your first memory.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((item) => `
+        <div class="surface-card overflow-hidden">
+          <img src="${item.url}" class="w-full h-36 object-cover">
+          <div class="p-2.5">
+            <p class="text-xs text-[var(--text-main)] truncate">${escapeHtml(item.caption)}</p>
+            <p class="text-[10px] text-[var(--text-muted)] mt-0.5">${escapeHtml(item.album)}</p>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("newAlbumBtn").addEventListener("click", async () => {
+      const name = prompt("Enter a new album name:");
+      if (!name || !name.trim()) return;
+      const clean = name.trim();
+      if (!(spaceData.albums || []).includes(clean)) {
+        await updateDoc(doc(db, "rooms", activeRoomCode), { albums: arrayUnion(clean) });
+        selectedAlbum = clean;
+      }
+    });
+
+    document.getElementById("memoryPhotoInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const caption = prompt("Add a short caption:", "") || "Captured moment";
+      const album = selectedAlbum === "All" ? "Moments" : selectedAlbum;
+      const url = await compressImage(file, 700, 0.75);
+
+      await addDoc(collection(db, "rooms", activeRoomCode, "memories"), {
+        album,
+        url,
+        caption,
+        uploadedBy: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+    });
+
+    // ==================== NOTES / WALL ====================
+    function renderFeed(posts) {
+      const list = document.getElementById("feedPostsList");
+      if (posts.length === 0) {
+        list.innerHTML = `
+          <div class="surface-card p-8 text-center space-y-1">
+            <p class="font-editorial text-2xl text-[var(--text-main)]">No shared notes yet</p>
+            <p class="text-xs text-[var(--text-muted)]">Write something above for the two of you.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = posts.map((post) => {
+        const isMe = post.authorUid === currentUser.uid;
+        const authorProf = membersMap[post.authorUid] || { name: "Partner", photo: "" };
+        const displayAuthor = isMe ? "You" : (authorProf.name || "Partner");
+        const likes = post.likes || [];
+        const likedByMe = likes.includes(currentUser.uid);
+        const comments = post.comments || [];
+
+        const avatarHtml = authorProf.photo
+          ? `<img src="${authorProf.photo}" class="w-7 h-7 rounded-full object-cover">`
+          : `<div class="w-7 h-7 rounded-full surface-pill accent-text flex items-center justify-center font-bold text-xs">${escapeHtml((authorProf.name || "?")[0].toUpperCase())}</div>`;
+
+        return `
+          <div class="surface-card p-4 border-l-2 border-l-[var(--accent)] space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                ${avatarHtml}
+                <span class="text-xs font-semibold text-[var(--text-main)]">${escapeHtml(displayAuthor)}</span>
+              </div>
+              ${isMe ? `
+                <button data-del="${post.id}" class="del-post-btn text-[var(--text-muted)] hover:text-rose-400 text-xs">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>` : ""}
+            </div>
+
+            <p class="text-sm text-[var(--text-main)]/95 leading-relaxed">${escapeHtml(post.content)}</p>
+
+            <div class="flex items-center justify-between pt-2 border-t border-[var(--border-soft)] text-xs text-[var(--text-muted)]">
+              <button data-like="${post.id}" class="like-post-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full surface-pill ${likedByMe ? "accent-text" : ""}">
+                <i class="${likedByMe ? "fa-solid" : "fa-regular"} fa-heart"></i>
+                <span>${likes.length}</span>
+              </button>
+              <button data-comment="${post.id}" class="comment-post-btn flex items-center gap-1.5 hover:text-[var(--text-main)]">
+                <i class="fa-regular fa-comment"></i>
+                <span>${comments.length} ${comments.length === 1 ? "reply" : "replies"}</span>
+              </button>
+            </div>
+
+            ${comments.length > 0 ? `
+              <div class="bg-[var(--bg-elevated)] rounded-xl p-2.5 space-y-1">
+                ${comments.map((c) => `<p class="text-[11px] text-[var(--text-muted)]"><span class="accent-text font-medium">${escapeHtml(c.authorName)}:</span> ${escapeHtml(c.text)}</p>`).join("")}
+              </div>
+            ` : ""}
+          </div>
+        `;
+      }).join("");
+
+      list.querySelectorAll(".like-post-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const post = posts.find((p) => p.id === btn.dataset.like);
+          if (!post) return;
+          const likes = post.likes || [];
+          const updated = likes.includes(currentUser.uid)
+            ? likes.filter((id) => id !== currentUser.uid)
+            : [...likes, currentUser.uid];
+          await updateDoc(doc(db, "rooms", activeRoomCode, "posts", post.id), { likes: updated });
+        });
+      });
+
+      list.querySelectorAll(".comment-post-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const reply = prompt("Write a reply:");
+          if (!reply || !reply.trim()) return;
+          const me = getMyProfile();
+          await updateDoc(doc(db, "rooms", activeRoomCode, "posts", btn.dataset.comment), {
+            comments: arrayUnion({ authorName: me.name || "Love", text: reply.trim() })
+          });
+        });
+      });
+
+      list.querySelectorAll(".del-post-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await deleteDoc(doc(db, "rooms", activeRoomCode, "posts", btn.dataset.del));
+        });
+      });
+    }
+
+    document.getElementById("createPostBtn").addEventListener("click", async () => {
+      const input = document.getElementById("feedInput");
+      const content = input.value.trim();
+      if (!content) return;
+      input.value = "";
+      await addDoc(collection(db, "rooms", activeRoomCode, "posts"), {
+        authorUid: currentUser.uid,
+        content,
+        likes: [],
+        comments: [],
+        createdAt: serverTimestamp()
+      });
+    });
+  </script>
+</body>
+</html>

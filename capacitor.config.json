@@ -1,5 +1,12 @@
-{
+﻿{
   "appId": "com.zainola.lereio",
   "appName": "Lereio",
-  "webDir": "web"
+  "webDir": "web",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }
