@@ -13,6 +13,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
+      /* Default: Dark Mode + Midnight Blue */
       --bg-outer: #07090e;
       --bg-base: #0c1018;
       --bg-card: #131926;
@@ -148,29 +149,53 @@
 
   <div class="app-shell">
 
-    <!-- ==================== 1. GOOGLE SIGN-IN SCREEN ==================== -->
-    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-8 text-center">
-      <div class="pt-6 flex items-center gap-2">
+    <!-- ==================== 1. EMAIL & PASSWORD SIGN-IN SCREEN ==================== -->
+    <div id="authScreen" class="flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
+      <div class="pt-3 flex items-center gap-2">
         <span class="w-2 h-2 rounded-full accent-bg"></span>
         <span class="text-[11px] uppercase tracking-[0.26em] text-[var(--text-muted)]">Private Space for Two</span>
       </div>
 
-      <div class="space-y-4 max-w-xs">
-        <h1 class="font-editorial text-6xl tracking-tight text-[var(--text-main)]">Lereio</h1>
-        <p class="text-xs text-[var(--text-muted)] leading-relaxed">
-          Sign in with Google to create a private couple's space or enter your partner's invite code to connect.
-        </p>
+      <div class="w-full max-w-xs space-y-4 my-auto py-4">
+        <div class="space-y-1.5">
+          <h1 class="font-editorial text-6xl tracking-tight text-[var(--text-main)]">Lereio</h1>
+          <p id="authSubtitle" class="text-xs text-[var(--text-muted)] leading-relaxed">
+            Sign in with your account to save your space in the cloud and connect with your partner.
+          </p>
+        </div>
 
-        <div class="pt-4">
-          <button id="googleSignInBtn" class="w-full py-3.5 px-5 rounded-2xl bg-white text-slate-900 font-semibold text-sm flex items-center justify-center gap-3 shadow-lg hover:opacity-95 transition">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-            <span id="googleSignInLabel">Continue with Google</span>
+        <!-- Mode Toggle: Sign In vs Create Account -->
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl surface-pill">
+          <button type="button" id="modeLoginTab" class="py-2 rounded-xl text-xs font-semibold accent-bg transition">
+            Sign In
+          </button>
+          <button type="button" id="modeSignupTab" class="py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition">
+            Create Account
           </button>
         </div>
-        <p id="authErrorMsg" class="text-xs text-rose-400 hidden pt-2 break-words"></p>
+
+        <form id="emailAuthForm" class="surface-card p-4 space-y-3 text-left">
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] mb-1">Email</label>
+            <input id="authEmailInput" type="email" required placeholder="you@example.com" autocomplete="email"
+              class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] mb-1">Password</label>
+            <input id="authPasswordInput" type="password" required minlength="6" placeholder="At least 6 characters" autocomplete="current-password"
+              class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+
+          <button type="submit" id="emailAuthSubmitBtn" class="w-full py-3 rounded-xl accent-bg font-semibold text-sm hover:opacity-95 transition flex items-center justify-center gap-2">
+            <span id="emailAuthSubmitLabel">Sign In</span>
+          </button>
+        </form>
+
+        <p id="authErrorMsg" class="text-xs text-rose-400 hidden break-words"></p>
       </div>
 
-      <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Your space stays saved across devices</p>
+      <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Cloud synced across your devices</p>
     </div>
 
     <!-- ==================== 2. CREATE / JOIN SPACE LOBBY ==================== -->
@@ -187,13 +212,14 @@
 
       <div class="w-full max-w-xs space-y-5 my-auto py-6">
         <div class="space-y-1">
-          <p id="lobbyWelcomeUser" class="text-xs accent-text font-semibold">Signed in</p>
+          <p id="lobbyWelcomeUser" class="text-xs accent-text font-semibold truncate">Signed in</p>
           <h2 class="font-editorial text-4xl text-[var(--text-main)]">Connect Your Space</h2>
           <p class="text-xs text-[var(--text-muted)] leading-relaxed">
             Create a brand-new private room and share the code, or enter the code your partner generated.
           </p>
         </div>
 
+        <!-- Option A: Generate Invite Code -->
         <div class="surface-card p-4 space-y-3 text-left">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl accent-soft-bg flex items-center justify-center">
@@ -216,6 +242,7 @@
           <div class="h-px flex-1 bg-[var(--border-soft)]"></div>
         </div>
 
+        <!-- Option B: Join Partner's Code -->
         <form id="joinSpaceForm" class="surface-card p-4 space-y-3 text-left">
           <label class="block text-xs font-semibold text-[var(--text-main)]">Enter Partner's Code</label>
           <div class="flex gap-2">
@@ -235,6 +262,7 @@
     <!-- ==================== 3. MAIN APP SHELL ==================== -->
     <div id="mainApp" class="hidden flex-1 flex flex-col overflow-hidden">
 
+      <!-- Clean Top Header -->
       <header class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0">
         <div class="flex items-center gap-2">
           <span class="w-2 h-2 rounded-full accent-bg"></span>
@@ -255,17 +283,19 @@
         </div>
       </header>
 
+      <!-- Main Scrollable Content Area -->
       <main class="flex-1 overflow-y-auto no-scrollbar pb-24">
 
-        <!-- TAB 1: HOME / OVERVIEW -->
+        <!-- ==================== TAB 1: HOME / OVERVIEW ==================== -->
         <section id="tab-home" class="p-5 space-y-4">
+
           <div class="surface-card p-4 flex items-center justify-between">
             <div class="space-y-0.5">
               <p id="greetingTime" class="text-[11px] uppercase tracking-wider accent-text font-semibold">Good evening</p>
               <h1 class="font-editorial text-3xl text-[var(--text-main)]">
                 <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
               </h1>
-              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">â€”</p>
+              <p id="liveDateText" class="text-[11px] text-[var(--text-muted)] pt-0.5">—</p>
             </div>
 
             <div class="flex items-center -space-x-2.5 shrink-0">
@@ -273,11 +303,12 @@
                 Me
               </div>
               <div id="heroPartnerAvatarWrap" class="w-11 h-11 rounded-2xl border-2 border-[var(--bg-card)] surface-pill overflow-hidden flex items-center justify-center font-semibold text-sm text-[var(--text-muted)]" title="Partner">
-                â™¡
+                ♡
               </div>
             </div>
           </div>
 
+          <!-- Invite Code Banner -->
           <div id="inviteBannerCard" class="surface-card p-4 flex items-center justify-between border border-dashed border-[var(--accent)]/50">
             <div>
               <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Waiting for Partner</p>
@@ -290,6 +321,7 @@
             </button>
           </div>
 
+          <!-- Live Interactive Mini-Map & Distance Card -->
           <div class="surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -321,16 +353,17 @@
               <div class="surface-pill rounded-2xl p-3">
                 <p id="myLocNameLabel" class="text-[11px] font-semibold accent-text truncate">You</p>
                 <p id="myLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
+                <p id="myLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
               </div>
               <div class="surface-pill rounded-2xl p-3">
                 <p id="partnerLocNameLabel" class="text-[11px] font-semibold accent-text truncate">Partner</p>
                 <p id="partnerLocPlaceText" class="text-xs text-[var(--text-main)] font-medium mt-0.5 truncate">Not shared yet</p>
-                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">â€”</p>
+                <p id="partnerLocTimeText" class="text-[10px] text-[var(--text-muted)] mt-0.5">—</p>
               </div>
             </div>
           </div>
 
+          <!-- Circular Milestone Ring Card -->
           <div class="surface-card p-6 flex flex-col items-center text-center">
             <div id="counterConfiguredView" class="w-full flex flex-col items-center">
               <div class="relative w-40 h-40 flex items-center justify-center my-1">
@@ -363,11 +396,11 @@
               <div class="grid grid-cols-2 gap-2.5 w-full mt-2.5 text-left">
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Monthsary</p>
-                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
+                  <p id="monthsaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
                 </div>
                 <div class="surface-pill rounded-2xl p-3">
                   <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next Anniversary</p>
-                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">â€”</p>
+                  <p id="anniversaryCountdown" class="text-xs text-[var(--text-main)] font-medium mt-0.5">—</p>
                 </div>
               </div>
             </div>
@@ -382,11 +415,11 @@
           </div>
         </section>
 
-        <!-- TAB 2: DIRECT CHAT -->
+        <!-- ==================== TAB 2: DIRECT CHAT ==================== -->
         <section id="tab-chat" class="hidden h-full flex flex-col">
           <div class="px-5 py-3 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
-              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">â™¡</div>
+              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
               <div>
                 <h2 id="chatPartnerName" class="text-sm font-semibold text-[var(--text-main)]">Partner</h2>
                 <p id="chatPartnerSub" class="text-[11px] text-[var(--text-muted)]">Private Space</p>
@@ -410,7 +443,7 @@
           </form>
         </section>
 
-        <!-- TAB 3: SHARED GALLERY -->
+        <!-- ==================== TAB 3: SHARED GALLERY ==================== -->
         <section id="tab-memories" class="hidden p-5 space-y-4">
           <div class="flex items-center justify-between">
             <div>
@@ -433,7 +466,7 @@
             <img id="latestMemoryImg" src="" class="w-full h-full object-cover" alt="Latest">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
               <span class="text-[10px] uppercase tracking-widest accent-text font-semibold">Latest Highlight</span>
-              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">â€”</p>
+              <p id="latestMemoryCaption" class="font-editorial text-2xl text-white leading-tight mt-0.5">—</p>
             </div>
           </div>
 
@@ -441,7 +474,7 @@
           <div id="memoriesGrid" class="grid grid-cols-2 gap-3"></div>
         </section>
 
-        <!-- TAB 4: SHARED NOTES / WALL -->
+        <!-- ==================== TAB 4: SHARED NOTES / WALL ==================== -->
         <section id="tab-feed" class="hidden p-5 space-y-4">
           <div class="surface-card p-4 space-y-3">
             <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
@@ -461,6 +494,7 @@
 
       </main>
 
+      <!-- Bottom Icon Navigation Bar -->
       <nav style="background-color: var(--nav-bg);" class="absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 py-2.5 flex items-center justify-between z-20">
         <button data-tab="home" class="nav-btn flex flex-col items-center gap-1 accent-text">
           <i class="fa-solid fa-house text-base"></i>
@@ -481,7 +515,7 @@
       </nav>
     </div>
 
-    <!-- PROFILE EDIT MODAL -->
+    <!-- ==================== PROFILE EDIT MODAL ==================== -->
     <div id="profileModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
       <div class="surface-card w-full max-w-sm p-5 space-y-4">
         <div class="flex items-center justify-between">
@@ -514,7 +548,7 @@
       </div>
     </div>
 
-    <!-- SPACE & THEME SETTINGS MODAL -->
+    <!-- ==================== SPACE & THEME SETTINGS MODAL ==================== -->
     <div id="settingsModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
       <div class="surface-card w-full max-w-sm p-5 space-y-4">
         <div class="flex items-center justify-between">
@@ -581,11 +615,11 @@
 
   </div>
 
-  <!-- ==================== FIREBASE + NATIVE CAPACITOR GOOGLE AUTH ==================== -->
+  <!-- ==================== FIREBASE EMAIL/PASSWORD + FIRESTORE SYNC ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
-      getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential,
+      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
       onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
@@ -602,22 +636,9 @@
       appId: "1:625861224922:web:04877017f1f2d04b67b8e3"
     };
 
-    const WEB_CLIENT_ID = "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com";
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.());
-
-    if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
-      window.Capacitor.Plugins.GoogleAuth.initialize({
-        clientId: WEB_CLIENT_ID,
-        scopes: ["profile", "email"],
-        grantOfflineAccess: true
-      });
-    }
 
     const LOCAL_MODE_KEY = "lereio_appearance_mode_v1";
     const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
@@ -631,6 +652,7 @@
 
     let currentUser = null;
     let activeRoomCode = "";
+    let authMode = "login"; // 'login' or 'signup'
     let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
     let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
 
@@ -752,28 +774,56 @@
       document.getElementById("profileModal").classList.add("hidden");
     }
 
-    // ==================== GOOGLE AUTHENTICATION (NATIVE ANDROID + WEB) ====================
-    document.getElementById("googleSignInBtn").addEventListener("click", async () => {
+    // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
+    function setAuthMode(mode) {
+      authMode = mode;
+      const loginTab = document.getElementById("modeLoginTab");
+      const signupTab = document.getElementById("modeSignupTab");
+      const submitLabel = document.getElementById("emailAuthSubmitLabel");
+      const subtitle = document.getElementById("authSubtitle");
       const errEl = document.getElementById("authErrorMsg");
-      const labelEl = document.getElementById("googleSignInLabel");
       errEl.classList.add("hidden");
-      labelEl.textContent = "Signing in...";
+
+      if (mode === "signup") {
+        signupTab.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
+        loginTab.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
+        submitLabel.textContent = "Create Account";
+        subtitle.textContent = "Create a cloud account with your email and password so your memories stay saved.";
+      } else {
+        loginTab.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
+        signupTab.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
+        submitLabel.textContent = "Sign In";
+        subtitle.textContent = "Sign in with your account to save your space in the cloud and connect with your partner.";
+      }
+    }
+
+    document.getElementById("modeLoginTab").addEventListener("click", () => setAuthMode("login"));
+    document.getElementById("modeSignupTab").addEventListener("click", () => setAuthMode("signup"));
+
+    document.getElementById("emailAuthForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("authEmailInput").value.trim();
+      const password = document.getElementById("authPasswordInput").value;
+      const errEl = document.getElementById("authErrorMsg");
+      const btn = document.getElementById("emailAuthSubmitBtn");
+      const label = document.getElementById("emailAuthSubmitLabel");
+
+      errEl.classList.add("hidden");
+      btn.disabled = true;
+      label.textContent = authMode === "signup" ? "Creating..." : "Signing in...";
 
       try {
-        if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
-          const googleUser = await window.Capacitor.Plugins.GoogleAuth.signIn();
-          const idToken = googleUser?.authentication?.idToken;
-          if (!idToken) throw new Error("No ID token returned from Google.");
-          const credential = GoogleAuthProvider.credential(idToken);
-          await signInWithCredential(auth, credential);
+        if (authMode === "signup") {
+          await createUserWithEmailAndPassword(auth, email, password);
         } else {
-          await signInWithPopup(auth, provider);
+          await signInWithEmailAndPassword(auth, email, password);
         }
       } catch (err) {
-        errEl.textContent = err?.message || JSON.stringify(err);
+        errEl.textContent = err.message || "Authentication failed.";
         errEl.classList.remove("hidden");
       } finally {
-        labelEl.textContent = "Continue with Google";
+        btn.disabled = false;
+        label.textContent = authMode === "signup" ? "Create Account" : "Sign In";
       }
     });
 
@@ -781,9 +831,6 @@
       closeAllModals();
       clearListeners();
       activeRoomCode = "";
-      if (isNativeAndroid && window.Capacitor?.Plugins?.GoogleAuth) {
-        try { await window.Capacitor.Plugins.GoogleAuth.signOut(); } catch (_) {}
-      }
       await signOut(auth);
     };
 
@@ -809,7 +856,7 @@
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           uid: user.uid,
-          email: user.email,
+          email: user.email || "",
           roomCode: ""
         });
         showLobby();
@@ -831,7 +878,7 @@
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.add("hidden");
       document.getElementById("lobbyScreen").classList.remove("hidden");
-      document.getElementById("lobbyWelcomeUser").textContent = `Hi, ${currentUser.displayName || currentUser.email}`;
+      document.getElementById("lobbyWelcomeUser").textContent = `Signed in as ${currentUser.email || "Member"}`;
     }
 
     document.getElementById("createSpaceBtn").addEventListener("click", async () => {
@@ -851,10 +898,11 @@
           createdAt: serverTimestamp()
         });
 
+        const fallbackName = (currentUser.email || "").split("@")[0] || "";
         await setDoc(doc(db, "rooms", code, "members", currentUser.uid), {
           uid: currentUser.uid,
-          name: currentUser.displayName ? currentUser.displayName.split(" ")[0] : "",
-          photo: currentUser.photoURL || "",
+          name: fallbackName,
+          photo: "",
           location: null
         });
 
@@ -899,11 +947,12 @@
       let isNewMember = false;
       if (!members.includes(currentUser.uid)) {
         isNewMember = true;
+        const fallbackName = (currentUser.email || "").split("@")[0] || "";
         await updateDoc(roomRef, { memberUids: arrayUnion(currentUser.uid) });
         await setDoc(doc(db, "rooms", raw, "members", currentUser.uid), {
           uid: currentUser.uid,
-          name: currentUser.displayName ? currentUser.displayName.split(" ")[0] : "",
-          photo: currentUser.photoURL || "",
+          name: fallbackName,
+          photo: "",
           location: null
         });
       }
@@ -1021,7 +1070,7 @@
     }
 
     function formatTimeAgo(ts) {
-      if (!ts) return "â€”";
+      if (!ts) return "—";
       const diffMins = Math.floor((Date.now() - ts) / 60000);
       if (diffMins < 1) return "Just now";
       if (diffMins < 60) return `${diffMins}m ago`;
@@ -1139,15 +1188,15 @@
         document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
         const pHtml = partner.photo
           ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
-          : escapeHtml((partner.name || "â™¡")[0].toUpperCase());
+          : escapeHtml((partner.name || "♡")[0].toUpperCase());
         partnerWrap.innerHTML = pHtml;
         chatPartnerAvatar.innerHTML = pHtml;
       } else {
         inviteBanner.classList.remove("hidden");
         document.getElementById("chatPartnerName").textContent = "Waiting for partner...";
         document.getElementById("chatPartnerSub").textContent = `Share code ${activeRoomCode}`;
-        partnerWrap.innerHTML = `â™¡`;
-        chatPartnerAvatar.innerHTML = `â™¡`;
+        partnerWrap.innerHTML = `♡`;
+        chatPartnerAvatar.innerHTML = `♡`;
       }
 
       document.getElementById("myLocNameLabel").textContent = me.name || "You";
@@ -1158,7 +1207,7 @@
         document.getElementById("myLocTimeText").textContent = formatTimeAgo(me.location.updatedAt);
       } else {
         document.getElementById("myLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("myLocTimeText").textContent = "â€”";
+        document.getElementById("myLocTimeText").textContent = "—";
       }
 
       if (partner?.location) {
@@ -1166,7 +1215,7 @@
         document.getElementById("partnerLocTimeText").textContent = formatTimeAgo(partner.location.updatedAt);
       } else {
         document.getElementById("partnerLocPlaceText").textContent = "Not shared yet";
-        document.getElementById("partnerLocTimeText").textContent = "â€”";
+        document.getElementById("partnerLocTimeText").textContent = "—";
       }
 
       const distHeadline = document.getElementById("distanceHeadline");
@@ -1174,7 +1223,7 @@
 
       if (me.location && partner?.location) {
         const km = calculateDistanceKm(me.location.lat, me.location.lng, partner.location.lat, partner.location.lng);
-        if (km < 0.15) distHeadline.textContent = "Right next to each other â™¡";
+        if (km < 0.15) distHeadline.textContent = "Right next to each other ♡";
         else if (km < 1) distHeadline.textContent = `${Math.round(km * 1000)} meters apart`;
         else distHeadline.textContent = `${km.toFixed(1)} km apart`;
 
@@ -1272,13 +1321,13 @@
       if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
       const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
       document.getElementById("anniversaryCountdown").textContent =
-        daysToAnniv === 0 ? "Today! â™¡" : `In ${daysToAnniv} days`;
+        daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} days`;
 
       let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
       if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
       const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
       document.getElementById("monthsaryCountdown").textContent =
-        daysToMonth === 0 ? "Today! â™¡" : `In ${daysToMonth} days`;
+        daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} days`;
     }
 
     setInterval(updateHomeCounters, 15000);
@@ -1391,7 +1440,7 @@
         } else {
           const avatarHtml = senderProf.photo
             ? `<img src="${senderProf.photo}" class="w-6 h-6 rounded-full object-cover shrink-0 mb-4">`
-            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "â™¡")[0].toUpperCase())}</div>`;
+            : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "♡")[0].toUpperCase())}</div>`;
 
           return `
             <div class="flex items-end gap-2">
@@ -1448,7 +1497,7 @@
         return `
           <button data-album="${escapeHtml(album)}"
             class="album-pill px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition ${active ? "accent-bg font-semibold" : "surface-pill text-[var(--text-muted)]"}">
-            ${escapeHtml(album)} Â· ${count}
+            ${escapeHtml(album)} · ${count}
           </button>
         `;
       }).join("");
