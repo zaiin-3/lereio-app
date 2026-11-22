@@ -164,7 +164,7 @@
 
   <div class="app-shell w-full max-w-[430px] md:rounded-[34px] md:border md:border-slate-500/20 md:shadow-2xl relative flex flex-col overflow-hidden">
 
-    <!-- ==================== STARTUP LOADING SCREEN (PREVENTS LOGIN FLASH) ==================== -->
+    <!-- ==================== STARTUP LOADING SCREEN ==================== -->
     <div id="loadingScreen" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
       <div class="flex items-center gap-2 mb-3">
         <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
@@ -220,7 +220,7 @@
       <p class="text-[11px] text-[var(--text-muted)]/70 pb-2">Device Privacy Lock</p>
     </div>
 
-    <!-- ==================== 1. EMAIL & PASSWORD SIGN IN SCREEN ==================== -->
+    <!-- ==================== 1. EMAIL & PASSWORD SIGN IN + FORGOT PASSWORD ==================== -->
     <div id="authScreen" class="hidden flex-1 flex flex-col items-center justify-between p-7 text-center overflow-y-auto no-scrollbar">
       <div class="pt-4 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full accent-bg"></span>
@@ -252,7 +252,12 @@
           </div>
 
           <div>
-            <label class="block text-[11px] text-[var(--text-muted)] mb-1">Password</label>
+            <div id="forgotPasswordRow" class="flex items-center justify-between mb-1">
+              <label class="block text-[11px] text-[var(--text-muted)]">Password</label>
+              <button type="button" id="forgotPasswordBtn" class="text-[11px] accent-text hover:underline">
+                Forgot password?
+              </button>
+            </div>
             <input id="authPasswordInput" type="password" required minlength="6" placeholder="At least 6 characters" autocomplete="current-password"
               class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
           </div>
@@ -262,6 +267,7 @@
           </button>
         </form>
 
+        <p id="authStatusMsg" class="text-xs accent-text hidden break-words"></p>
         <p id="authErrorMsg" class="text-xs text-rose-400 hidden break-words"></p>
       </div>
 
@@ -287,6 +293,19 @@
           <p class="text-xs text-[var(--text-muted)] leading-relaxed">
             Create a brand-new private room and share the code, or enter the code your partner generated.
           </p>
+        </div>
+
+        <!-- Quick Rejoin Previous Space Card -->
+        <div id="rejoinLastSpaceCard" class="hidden surface-card p-4 flex items-center justify-between gap-3 border border-[var(--accent)]/45 text-left">
+          <div class="min-w-0">
+            <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Previous Space Found</p>
+            <p id="rejoinLastSpaceCode" class="text-base font-bold tracking-widest text-[var(--text-main)] mt-0.5">LRO-000</p>
+            <p class="text-[11px] text-[var(--text-muted)]">Jump right back into your last room</p>
+          </div>
+          <button type="button" id="rejoinLastSpaceBtn" class="px-3.5 py-2 rounded-xl accent-bg text-xs font-semibold shrink-0 hover:opacity-90 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
+            <span>Rejoin</span>
+          </button>
         </div>
 
         <div class="surface-card p-4 space-y-3 text-left">
@@ -330,18 +349,22 @@
     <!-- ==================== 3. MAIN APP SHELL ==================== -->
     <div id="mainApp" class="hidden flex-1 flex flex-col min-h-0 overflow-hidden">
 
-      <!-- Clean Top Header with Notification Bell, Profile & Settings -->
+      <!-- Clean Top Header with Offline-Only Pill, Notification Bell, Profile & Settings -->
       <header class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0 z-20 bg-[var(--bg-base)]/90 backdrop-blur-sm">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full accent-bg"></span>
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full accent-bg shrink-0"></span>
           <span class="font-editorial text-2xl tracking-wide text-[var(--text-main)]">Lereio</span>
+          <span id="connectionStatusPill" class="hidden px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 accent-soft-bg">
+            <span id="connectionDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span id="connectionLabel">Offline</span>
+          </span>
         </div>
 
-        <div class="flex items-center gap-1.5">
-          <button id="openProfileBtn" class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="openProfileBtn" class="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full surface-pill hover:opacity-90 transition" title="Edit Profile">
             <img id="headerMyAvatar" src="" class="w-6 h-6 rounded-full object-cover hidden" alt="Me">
             <div id="headerMyInitial" class="w-6 h-6 rounded-full accent-soft-bg text-[11px] font-bold flex items-center justify-center">?</div>
-            <span id="headerMyName" class="text-xs text-[var(--text-main)] font-medium max-w-[76px] truncate">Set Name</span>
+            <span id="headerMyName" class="text-xs text-[var(--text-main)] font-medium max-w-[68px] truncate">Set Name</span>
             <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
           </button>
 
@@ -367,7 +390,7 @@
             <span id="pullRefreshLabel">Pull down to refresh</span>
           </div>
 
-          <!-- Greeting + Quick "Thinking of You" Status Card -->
+          <!-- Greeting + Daily Rhythm Vibe Check-In Card -->
           <div class="surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="space-y-0.5">
@@ -376,6 +399,7 @@
                   <button type="button" id="homeRefreshBtn" class="text-[11px] text-[var(--text-muted)] hover:accent-text transition" title="Refresh Home">
                     <i id="homeRefreshIcon" class="fa-solid fa-rotate-right"></i>
                   </button>
+                  <span id="lastSyncedLabel" class="text-[10px] text-[var(--text-muted)]">Synced just now</span>
                 </div>
                 <h1 class="font-editorial text-3xl text-[var(--text-main)]">
                   <span id="myDisplayNameHero">You</span> & <span id="partnerDisplayNameHero">Partner</span>
@@ -393,19 +417,21 @@
               </div>
             </div>
 
-            <!-- Quick Check-In Status Row -->
+            <!-- Daily Rhythm Check-In Row -->
             <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-[var(--border-soft)]">
-              <button type="button" id="openMyStatusBtn" class="surface-pill rounded-xl px-2.5 py-2 text-left flex items-center justify-between gap-1.5 hover:border-[var(--accent)]/50 transition" title="Update your vibe">
+              <button type="button" id="openMyStatusBtn" class="surface-pill rounded-xl px-2.5 py-2 text-left flex items-center justify-between gap-1.5 hover:border-[var(--accent)]/50 transition" title="Update your daily rhythm vibe">
                 <div class="min-w-0">
-                  <p id="myStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Your vibe</p>
-                  <p id="myStatusText" class="text-xs font-medium text-[var(--text-main)] truncate mt-0.5">💭 Set vibe...</p>
+                  <p id="myStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Your rhythm</p>
+                  <p id="myStatusText" class="text-xs font-medium text-[var(--text-main)] truncate mt-0.5">💭 Set rhythm...</p>
+                  <p id="myStatusTime" class="text-[10px] text-[var(--text-muted)]/80 truncate">—</p>
                 </div>
                 <i class="fa-solid fa-chevron-down text-[9px] text-[var(--text-muted)] shrink-0"></i>
               </button>
 
               <div class="surface-pill rounded-xl px-2.5 py-2 text-left min-w-0">
-                <p id="partnerStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Partner's vibe</p>
+                <p id="partnerStatusOwnerLabel" class="text-[10px] text-[var(--text-muted)] truncate">Partner's rhythm</p>
                 <p id="partnerStatusText" class="text-xs font-medium text-[var(--text-main)] truncate mt-0.5">♡ Quietly here</p>
+                <p id="partnerStatusTime" class="text-[10px] text-[var(--text-muted)]/80 truncate">—</p>
               </div>
             </div>
           </div>
@@ -451,6 +477,7 @@
             </button>
           </div>
 
+          <!-- Live Map + Dynamic Pinned Places Distance Track Card -->
           <div class="surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -471,6 +498,19 @@
                   <i id="locSpinIcon" class="fa-solid fa-crosshairs text-[10px]"></i>
                   <span>Update</span>
                 </button>
+              </div>
+            </div>
+
+            <!-- Visual Distance Track Between Both Pinned Places -->
+            <div id="gapTrackerBox" class="hidden surface-pill rounded-2xl p-3 space-y-2">
+              <div class="flex items-center justify-between text-[10px] font-semibold gap-2">
+                <span id="gapLeftPlace" class="accent-text truncate max-w-[35%]">You</span>
+                <span id="gapMarkerLabel" class="text-[var(--text-muted)] shrink-0">—</span>
+                <span id="gapRightPlace" class="accent-text truncate max-w-[35%] text-right">Partner</span>
+              </div>
+              <div class="relative h-2 rounded-full bg-[var(--bg-card)] border border-[var(--border-soft)] overflow-visible">
+                <div id="gapProgressFill" class="h-full rounded-full accent-bg transition-all duration-500" style="width: 100%;"></div>
+                <span id="gapMarkerDot" class="w-3.5 h-3.5 rounded-full accent-bg border-2 border-[var(--bg-card)] absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500" style="left: 50%;"></span>
               </div>
             </div>
 
@@ -546,19 +586,8 @@
           </div>
         </section>
 
-        <!-- ==================== TAB 2: DIRECT CHAT ==================== -->
+        <!-- ==================== TAB 2: DIRECT CHAT (CLEAN HEADER) ==================== -->
         <section id="tab-chat" class="hidden">
-          <div class="px-5 py-2.5 bg-[var(--bg-card)] border-b border-[var(--border-soft)] flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-              <div id="chatPartnerAvatarWrap" class="w-9 h-9 rounded-full surface-pill overflow-hidden flex items-center justify-center font-bold text-sm accent-text">♡</div>
-              <div>
-                <h2 id="chatPartnerName" class="text-sm font-semibold text-[var(--text-main)]">Partner</h2>
-                <p id="chatPartnerSub" class="text-[11px] text-[var(--text-muted)]">Private Space</p>
-              </div>
-            </div>
-            <span id="chatRoomBadge" class="text-[10px] px-2.5 py-1 rounded-full accent-soft-bg font-semibold">LRO-000</span>
-          </div>
-
           <div id="chatMessagesContainer" class="no-scrollbar space-y-3"></div>
 
           <form id="chatForm">
@@ -605,22 +634,60 @@
           <div id="memoriesGrid" class="grid grid-cols-2 gap-3"></div>
         </section>
 
-        <!-- ==================== TAB 4: SHARED NOTES / WALL ==================== -->
+        <!-- ==================== TAB 4: SHARED NOTES, PINNED NOTE & SOMEDAY LIST ==================== -->
         <section id="tab-feed" class="hidden flex-1 overflow-y-auto no-scrollbar p-5 pb-24 space-y-4">
-          <div class="surface-card p-4 space-y-3">
-            <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
-              class="w-full bg-transparent text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] resize-none focus:outline-none"></textarea>
-            <div class="flex items-center justify-between pt-2 border-t border-[var(--border-soft)]">
-              <span class="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
-                <i class="fa-solid fa-lock text-[10px] accent-text"></i> Only the two of you can see this
-              </span>
-              <button id="createPostBtn" class="px-4 py-1.5 rounded-full accent-bg text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
-                <i class="fa-solid fa-paper-plane text-[10px]"></i> Post
-              </button>
-            </div>
+          <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl surface-pill">
+            <button type="button" id="subtabNotesBtn" class="py-2 rounded-xl text-xs font-semibold accent-bg transition">
+              Notes & Pinned
+            </button>
+            <button type="button" id="subtabSomedayBtn" class="py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition">
+              Someday List
+            </button>
           </div>
 
-          <div id="feedPostsList" class="space-y-3"></div>
+          <!-- Notes Sub-View -->
+          <div id="notesSubView" class="space-y-4">
+            <div id="pinnedNoteBanner" class="hidden surface-card p-3.5 border border-[var(--accent)]/50 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] uppercase tracking-wider accent-text font-semibold flex items-center gap-1.5">
+                  <i class="fa-solid fa-thumbtack text-[10px]"></i> Shared Pinned Note
+                </span>
+                <button type="button" id="unpinNoteBtn" class="text-[10px] text-[var(--text-muted)] hover:accent-text">Unpin</button>
+              </div>
+              <p id="pinnedNoteText" class="text-xs text-[var(--text-main)] leading-relaxed"></p>
+            </div>
+
+            <div class="surface-card p-4 space-y-3">
+              <textarea id="feedInput" rows="2" placeholder="Leave a note for each other..."
+                class="w-full bg-transparent text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] resize-none focus:outline-none"></textarea>
+              <div class="flex items-center justify-between pt-2 border-t border-[var(--border-soft)]">
+                <span class="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
+                  <i class="fa-solid fa-lock text-[10px] accent-text"></i> Only the two of you can see this
+                </span>
+                <button id="createPostBtn" class="px-4 py-1.5 rounded-full accent-bg text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition">
+                  <i class="fa-solid fa-paper-plane text-[10px]"></i> Post
+                </button>
+              </div>
+            </div>
+
+            <div id="feedPostsList" class="space-y-3"></div>
+          </div>
+
+          <!-- Shared Someday / Visit List Sub-View -->
+          <div id="somedaySubView" class="hidden space-y-3">
+            <form id="somedayForm" class="surface-card p-3.5 space-y-2.5">
+              <p class="text-[11px] font-semibold accent-text">Places, food, or moments for someday</p>
+              <div class="flex gap-2">
+                <input id="somedayInput" type="text" maxlength="100" placeholder="Add a place, food, or moment..."
+                  class="flex-1 bg-[var(--bg-elevated)] text-xs text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3 py-2 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
+                <button type="submit" class="px-3.5 py-2 rounded-xl accent-bg text-xs font-semibold hover:opacity-90 transition">
+                  Add
+                </button>
+              </div>
+            </form>
+
+            <div id="somedayListContainer" class="space-y-2"></div>
+          </div>
         </section>
 
       </main>
@@ -665,7 +732,7 @@
         <img id="photoViewerImg" src="" class="max-w-full max-h-full object-contain rounded-xl" alt="Full screen">
       </div>
 
-      <p class="text-center text-[11px] text-white/50 pb-1">Tap Save to download photo</p>
+      <p class="text-center text-[11px] text-white/50 pb-1">Tap Save to export or download photo</p>
     </div>
 
     <!-- ==================== EMOJI REACTION PICKER MODAL (FOR CHAT & NOTES) ==================== -->
@@ -690,13 +757,13 @@
       </div>
     </div>
 
-    <!-- ==================== QUICK STATUS / VIBE MODAL ==================== -->
+    <!-- ==================== QUICK DAILY RHYTHM / VIBE MODAL ==================== -->
     <div id="statusModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-5">
       <div class="surface-card w-full max-w-sm p-5 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="font-editorial text-3xl text-[var(--text-main)]">Your Current Vibe</h3>
-            <p class="text-[11px] text-[var(--text-muted)]">Let your partner know your mood at a glance</p>
+            <h3 class="font-editorial text-3xl text-[var(--text-main)]">Daily Rhythm</h3>
+            <p class="text-[11px] text-[var(--text-muted)]">Quick LDR check-in for your partner</p>
           </div>
           <button onclick="document.getElementById('statusModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
             <i class="fa-solid fa-xmark"></i>
@@ -706,7 +773,7 @@
         <div id="statusPresetGrid" class="grid grid-cols-2 gap-2"></div>
 
         <form id="customStatusForm" class="flex gap-2 pt-2 border-t border-[var(--border-soft)]">
-          <input id="customStatusInput" type="text" maxlength="32" placeholder="Or type a custom vibe..."
+          <input id="customStatusInput" type="text" maxlength="32" placeholder="Or type a custom check-in..."
             class="flex-1 bg-[var(--bg-elevated)] text-xs text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3 py-2 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]" />
           <button type="submit" class="px-3.5 py-2 rounded-xl accent-bg text-xs font-semibold hover:opacity-90 transition">
             Set
@@ -836,6 +903,24 @@
           </div>
         </div>
 
+        <!-- Personal Data Export (TXT & JSON) -->
+        <div class="surface-pill rounded-2xl p-3 space-y-2">
+          <div>
+            <p class="text-xs font-semibold text-[var(--text-main)]">Personal Space Backup</p>
+            <p class="text-[11px] text-[var(--text-muted)]">Download your notes, chat & someday list</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="exportTxtBtn" class="py-2 px-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-soft)] text-xs font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition flex items-center justify-center gap-1.5">
+              <i class="fa-regular fa-file-lines text-[11px] accent-text"></i>
+              <span>Export TXT</span>
+            </button>
+            <button type="button" id="exportJsonBtn" class="py-2 px-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-soft)] text-xs font-semibold text-[var(--text-main)] hover:border-[var(--accent)] transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-code text-[11px] accent-text"></i>
+              <span>Export JSON</span>
+            </button>
+          </div>
+        </div>
+
         <button id="saveSettingsBtn" class="w-full py-2.5 rounded-xl accent-bg font-semibold text-sm hover:opacity-90 transition">
           Save Changes
         </button>
@@ -857,7 +942,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
       getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-      onAuthStateChanged, signOut
+      sendPasswordResetEmail, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       initializeFirestore, persistentLocalCache,
@@ -884,6 +969,10 @@
     const LOCAL_THEME_KEY = "lereio_accent_theme_v1";
     const LOCAL_PIN_KEY = "lereio_privacy_pin_v1";
     const LOCAL_ROOM_HINT_KEY = "lereio_last_room_code_v1";
+    const LOCAL_PREV_ROOM_KEY = "lereio_previous_room_code_v1";
+
+    // Baseline distance scale for the visual distance progress marker (~805 km)
+    const DISTANCE_TRACK_SCALE_KM = 805;
 
     const ACCENTS = {
       blue:    { dark: "#60a5fa", darkContrast: "#08111e", light: "#2563eb", lightContrast: "#ffffff", soft: "rgba(96, 165, 250, 0.14)", glow: "rgba(96, 165, 250, 0.11)" },
@@ -899,13 +988,13 @@
     ];
 
     const STATUS_PRESETS = [
+      "🎒 Heading to class/work",
+      "🌧️ Rainy day here",
+      "📶 Signal's spotty",
       "🥺 Missing you",
       "😴 Sleepy",
-      "🚗 On my way",
-      "📚 Busy / Studying",
       "🍜 Eating",
       "🥰 Thinking of you",
-      "🎧 Chilling",
       "✨ Free to talk"
     ];
 
@@ -923,7 +1012,19 @@
     let currentMode = localStorage.getItem(LOCAL_MODE_KEY) || "dark";
     let currentAccent = localStorage.getItem(LOCAL_THEME_KEY) || "blue";
 
-    let spaceData = { startDate: "", theme: "blue", albums: ["All", "Moments", "Selfies", "Dates"], memberUids: [], whispers: [] };
+    function createDefaultSpaceData() {
+      return {
+        startDate: "",
+        theme: currentAccent,
+        albums: ["All", "Moments", "Selfies", "Dates"],
+        memberUids: [],
+        whispers: [],
+        pinnedNoteId: "",
+        somedayItems: []
+      };
+    }
+
+    let spaceData = createDefaultSpaceData();
     let membersMap = {};
     let allMessages = [];
     let allMemories = [];
@@ -934,10 +1035,53 @@
     let activeReactionTarget = null;
     let activeViewerDataUrl = "";
     let unsubscribers = [];
+    let lastSyncedAt = Date.now();
+    let userSentNewChat = false;
 
     let leafletMap = null;
     let leafletTileLayer = null;
     let mapMarkersLayer = null;
+
+    function resetSpaceData() {
+      spaceData = createDefaultSpaceData();
+      selectedAlbum = "All";
+      whisperIndex = 0;
+    }
+
+    // ==================== CONNECTION & OFFLINE AWARENESS ====================
+    function markSyncedNow() {
+      lastSyncedAt = Date.now();
+      const el = document.getElementById("lastSyncedLabel");
+      if (el) {
+        el.textContent = navigator.onLine === false ? "Cached offline" : "Synced just now";
+      }
+    }
+
+    function updateConnectionPill() {
+      const online = navigator.onLine !== false;
+      const pill = document.getElementById("connectionStatusPill");
+      const dot = document.getElementById("connectionDot");
+      const label = document.getElementById("connectionLabel");
+      if (!pill || !dot || !label) return;
+
+      if (online) {
+        pill.classList.add("hidden");
+      } else {
+        pill.classList.remove("hidden");
+        dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+        label.textContent = "Offline";
+      }
+    }
+
+    window.addEventListener("online", () => {
+      updateConnectionPill();
+      markSyncedNow();
+    });
+    window.addEventListener("offline", () => {
+      updateConnectionPill();
+      markSyncedNow();
+    });
+    updateConnectionPill();
 
     // ==================== 4-DIGIT PRIVACY PIN LOCK ====================
     let enteredPin = "";
@@ -1043,7 +1187,7 @@
 
     checkAndShowPinLock();
 
-    // ==================== FULL-SCREEN PHOTO VIEWER + ANDROID FILESYSTEM SAVE ====================
+    // ==================== FULL-SCREEN PHOTO VIEWER + ANDROID 11+ SAFE SAVE ====================
     function openPhotoViewer(dataUrl, caption = "Lereio Photo") {
       if (!dataUrl) return;
       activeViewerDataUrl = dataUrl;
@@ -1069,31 +1213,40 @@
           ? activeViewerDataUrl.split(",")[1]
           : activeViewerDataUrl;
 
-        const capFs = window.Capacitor?.Plugins?.Filesystem;
-        const isNative = Boolean(window.Capacitor?.isNativePlatform?.());
+        const cap = window.Capacitor;
+        const isNative = Boolean(cap?.isNativePlatform?.());
+        const capFs = cap?.Plugins?.Filesystem;
+        const capShare = cap?.Plugins?.Share;
 
         if (isNative && capFs) {
-          if (capFs.checkPermissions && capFs.requestPermissions) {
-            const perms = await capFs.checkPermissions();
-            if (perms.publicStorage !== "granted") {
-              await capFs.requestPermissions();
-            }
-          }
-
-          await capFs.writeFile({
-            path: `Download/${filename}`,
+          const written = await capFs.writeFile({
+            path: filename,
             data: base64Data,
-            directory: "EXTERNAL_STORAGE",
-            recursive: true
+            directory: "CACHE"
           });
 
-          label.textContent = "Saved to Downloads!";
-          setTimeout(() => { label.textContent = "Save"; }, 2000);
-          return;
+          if (capShare?.share && written?.uri) {
+            await capShare.share({
+              title: "Lereio Photo",
+              files: [written.uri]
+            });
+            label.textContent = "Saved / Shared!";
+            setTimeout(() => { label.textContent = "Save"; }, 1800);
+            return;
+          }
         }
 
         const res = await fetch(activeViewerDataUrl);
         const blob = await res.blob();
+        const file = new File([blob], filename, { type: "image/jpeg" });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "Lereio Photo" });
+          label.textContent = "Saved!";
+          setTimeout(() => { label.textContent = "Save"; }, 1800);
+          return;
+        }
+
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = blobUrl;
@@ -1106,7 +1259,11 @@
         label.textContent = "Saved!";
         setTimeout(() => { label.textContent = "Save"; }, 1800);
       } catch (err) {
-        alert("Could not save image: " + (err?.message || err));
+        if (err && err.name === "AbortError") {
+          label.textContent = "Save";
+          return;
+        }
+        alert("Could not save photo: " + (err?.message || err));
         label.textContent = "Save";
       }
     });
@@ -1243,7 +1400,9 @@
     }
 
     function clearListeners() {
-      unsubscribers.forEach((unsub) => unsub());
+      unsubscribers.forEach((unsub) => {
+        try { unsub(); } catch (_) {}
+      });
       unsubscribers = [];
     }
 
@@ -1256,41 +1415,96 @@
       document.getElementById("photoViewerModal").classList.add("hidden");
     }
 
-    // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
+    // ==================== EMAIL & PASSWORD AUTHENTICATION + FORGOT PASSWORD ====================
+    function formatAuthError(err) {
+      const code = err?.code || "";
+      switch (code) {
+        case "auth/email-already-in-use":
+          return "Email already in use";
+        case "auth/invalid-email":
+          return "Enter a valid email address";
+        case "auth/weak-password":
+          return "Password must be at least 6 characters";
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          return "Incorrect email or password";
+        case "auth/too-many-requests":
+          return "Too many attempts. Try again in a bit";
+        case "auth/network-request-failed":
+          return "No internet connection";
+        default:
+          return err?.message || "Something went wrong. Please try again";
+      }
+    }
+
     function setAuthMode(mode) {
       authMode = mode;
       const loginTab = document.getElementById("modeLoginTab");
       const signupTab = document.getElementById("modeSignupTab");
       const submitLabel = document.getElementById("emailAuthSubmitLabel");
       const subtitle = document.getElementById("authSubtitle");
+      const forgotRow = document.getElementById("forgotPasswordRow");
       const errEl = document.getElementById("authErrorMsg");
+      const statusEl = document.getElementById("authStatusMsg");
       errEl.classList.add("hidden");
+      statusEl.classList.add("hidden");
 
       if (mode === "signup") {
         signupTab.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
         loginTab.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
         submitLabel.textContent = "Create Account";
         subtitle.textContent = "Create a cloud account with your email and password so your memories stay saved.";
+        forgotRow?.classList.add("hidden");
       } else {
         loginTab.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
         signupTab.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
         submitLabel.textContent = "Sign In";
         subtitle.textContent = "Sign in with your account to save your space in the cloud and connect with your partner.";
+        forgotRow?.classList.remove("hidden");
       }
     }
 
     document.getElementById("modeLoginTab").addEventListener("click", () => setAuthMode("login"));
     document.getElementById("modeSignupTab").addEventListener("click", () => setAuthMode("signup"));
 
+    document.getElementById("forgotPasswordBtn").addEventListener("click", async () => {
+      const emailInput = document.getElementById("authEmailInput");
+      const errEl = document.getElementById("authErrorMsg");
+      const statusEl = document.getElementById("authStatusMsg");
+      const email = (emailInput.value || "").trim();
+
+      errEl.classList.add("hidden");
+      statusEl.classList.add("hidden");
+
+      if (!email) {
+        errEl.textContent = "Enter your email address above first, then tap Forgot password?";
+        errEl.classList.remove("hidden");
+        emailInput.focus();
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        statusEl.textContent = `Password reset link sent to ${email}. Check your inbox and Spam folder.`;
+        statusEl.classList.remove("hidden");
+      } catch (err) {
+        errEl.textContent = formatAuthError(err);
+        errEl.classList.remove("hidden");
+      }
+    });
+
     document.getElementById("emailAuthForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("authEmailInput").value.trim();
       const password = document.getElementById("authPasswordInput").value;
       const errEl = document.getElementById("authErrorMsg");
+      const statusEl = document.getElementById("authStatusMsg");
       const btn = document.getElementById("emailAuthSubmitBtn");
       const label = document.getElementById("emailAuthSubmitLabel");
 
       errEl.classList.add("hidden");
+      statusEl.classList.add("hidden");
       btn.disabled = true;
       label.textContent = authMode === "signup" ? "Creating..." : "Signing in...";
 
@@ -1301,7 +1515,7 @@
           await signInWithEmailAndPassword(auth, email, password);
         }
       } catch (err) {
-        errEl.textContent = err.message || "Authentication failed.";
+        errEl.textContent = formatAuthError(err);
         errEl.classList.remove("hidden");
       } finally {
         btn.disabled = false;
@@ -1313,6 +1527,11 @@
       closeAllModals();
       clearListeners();
       activeRoomCode = "";
+      membersMap = {};
+      allMessages = [];
+      allMemories = [];
+      allPosts = [];
+      resetSpaceData();
       localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
       await signOut(auth);
     };
@@ -1320,13 +1539,35 @@
     document.getElementById("signOutBtn").addEventListener("click", handleSignOut);
     document.getElementById("lobbySignOutBtn").addEventListener("click", handleSignOut);
 
+    // Failsafe: never allow loadingScreen to hang more than 3.5 seconds
+    const startupFailsafe = setTimeout(() => {
+      const loadingEl = document.getElementById("loadingScreen");
+      if (loadingEl && !loadingEl.classList.contains("hidden")) {
+        loadingEl.classList.add("hidden");
+        const hinted = localStorage.getItem(LOCAL_ROOM_HINT_KEY);
+        if (currentUser && hinted) {
+          enterRoom(hinted, false, true);
+        } else if (currentUser) {
+          showLobby();
+        } else {
+          document.getElementById("authScreen").classList.remove("hidden");
+        }
+      }
+    }, 3500);
+
     onAuthStateChanged(auth, async (user) => {
+      clearTimeout(startupFailsafe);
       closeAllModals();
       const loadingEl = document.getElementById("loadingScreen");
 
       if (!user) {
         currentUser = null;
         activeRoomCode = "";
+        membersMap = {};
+        allMessages = [];
+        allMemories = [];
+        allPosts = [];
+        resetSpaceData();
         clearListeners();
         loadingEl.classList.add("hidden");
         document.getElementById("lobbyScreen").classList.add("hidden");
@@ -1336,11 +1577,10 @@
       }
 
       currentUser = user;
-
-      // Fast-path into cached room if available while Firestore syncs
       const hintedRoom = localStorage.getItem(LOCAL_ROOM_HINT_KEY);
+
       if (hintedRoom && !activeRoomCode) {
-        enterRoom(hintedRoom, false, true);
+        await enterRoom(hintedRoom, false, true);
       }
 
       try {
@@ -1362,24 +1602,46 @@
         const savedRoom = userSnap.data().roomCode;
         if (savedRoom) {
           localStorage.setItem(LOCAL_ROOM_HINT_KEY, savedRoom);
-          await enterRoom(savedRoom, false, false);
+          localStorage.setItem(LOCAL_PREV_ROOM_KEY, savedRoom);
+          if (activeRoomCode !== savedRoom) {
+            await enterRoom(savedRoom, false, false);
+          } else {
+            loadingEl.classList.add("hidden");
+          }
         } else {
           localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
           loadingEl.classList.add("hidden");
           showLobby();
         }
       } catch (_) {
-        // Offline fallback: stay in hinted room if cached
-        if (hintedRoom) {
-          enterRoom(hintedRoom, false, true);
+        if (!activeRoomCode) {
+          if (hintedRoom) {
+            await enterRoom(hintedRoom, false, true);
+          } else {
+            loadingEl.classList.add("hidden");
+            showLobby();
+          }
         } else {
           loadingEl.classList.add("hidden");
-          showLobby();
         }
       }
     });
 
-    // ==================== CREATE / JOIN SPACE LOBBY ====================
+    // ==================== CREATE / JOIN SPACE LOBBY + QUICK REJOIN ====================
+    function refreshPreviousSpaceCard() {
+      const card = document.getElementById("rejoinLastSpaceCard");
+      const codeEl = document.getElementById("rejoinLastSpaceCode");
+      if (!card || !codeEl) return;
+
+      const prevCode = (localStorage.getItem(LOCAL_PREV_ROOM_KEY) || "").trim().toUpperCase();
+      if (prevCode && prevCode !== activeRoomCode) {
+        codeEl.textContent = prevCode;
+        card.classList.remove("hidden");
+      } else {
+        card.classList.add("hidden");
+      }
+    }
+
     function showLobby() {
       closeAllModals();
       clearListeners();
@@ -1387,16 +1649,75 @@
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.add("hidden");
       document.getElementById("lobbyScreen").classList.remove("hidden");
-      document.getElementById("lobbyWelcomeUser").textContent = `Signed in as ${currentUser.email || "Member"}`;
+      document.getElementById("lobbyWelcomeUser").textContent = `Signed in as ${currentUser?.email || "Member"}`;
+      refreshPreviousSpaceCard();
     }
+
+    document.getElementById("rejoinLastSpaceBtn").addEventListener("click", async () => {
+      if (!currentUser) return;
+      const prevCode = (localStorage.getItem(LOCAL_PREV_ROOM_KEY) || "").trim().toUpperCase();
+      if (!prevCode) return;
+
+      const errEl = document.getElementById("lobbyErrorMsg");
+      errEl.classList.add("hidden");
+
+      const btn = document.getElementById("rejoinLastSpaceBtn");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i><span>Joining...</span>`;
+
+      try {
+        const roomRef = doc(db, "rooms", prevCode);
+        const snap = await getDoc(roomRef);
+        if (!snap.exists()) {
+          errEl.textContent = `Room ${prevCode} no longer exists.`;
+          errEl.classList.remove("hidden");
+          localStorage.removeItem(LOCAL_PREV_ROOM_KEY);
+          refreshPreviousSpaceCard();
+          return;
+        }
+
+        const data = snap.data();
+        const members = data.memberUids || [];
+        if (!members.includes(currentUser.uid) && members.length >= 2) {
+          errEl.textContent = "This space is already locked between two people.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+
+        if (!members.includes(currentUser.uid)) {
+          const fallbackName = (currentUser.email || "").split("@")[0] || "";
+          await updateDoc(roomRef, { memberUids: arrayUnion(currentUser.uid) });
+          await setDoc(doc(db, "rooms", prevCode, "members", currentUser.uid), {
+            uid: currentUser.uid,
+            name: fallbackName,
+            photo: "",
+            status: "💭 Set rhythm...",
+            statusUpdatedAt: Date.now(),
+            location: null
+          });
+        }
+
+        resetSpaceData();
+        await updateDoc(doc(db, "users", currentUser.uid), { roomCode: prevCode });
+        localStorage.setItem(LOCAL_ROOM_HINT_KEY, prevCode);
+        await enterRoom(prevCode, false, false);
+      } catch (err) {
+        errEl.textContent = err?.message || "Could not rejoin previous space.";
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i><span>Rejoin</span>`;
+      }
+    });
 
     document.getElementById("createSpaceBtn").addEventListener("click", async () => {
       if (!currentUser) return;
       const btn = document.getElementById("createSpaceBtn");
       btn.disabled = true;
-      btn.textContent = "Generating...";
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Generating...</span>`;
 
       try {
+        resetSpaceData();
         const code = generateInviteCode();
         await setDoc(doc(db, "rooms", code), {
           code,
@@ -1404,6 +1725,8 @@
           theme: currentAccent,
           albums: ["All", "Moments", "Selfies", "Dates"],
           whispers: [],
+          pinnedNoteId: "",
+          somedayItems: [],
           memberUids: [currentUser.uid],
           createdAt: serverTimestamp()
         });
@@ -1413,15 +1736,17 @@
           uid: currentUser.uid,
           name: fallbackName,
           photo: "",
-          status: "💭 Set vibe...",
+          status: "💭 Set rhythm...",
+          statusUpdatedAt: Date.now(),
           location: null
         });
 
         await updateDoc(doc(db, "users", currentUser.uid), { roomCode: code });
         localStorage.setItem(LOCAL_ROOM_HINT_KEY, code);
+        localStorage.setItem(LOCAL_PREV_ROOM_KEY, code);
         await enterRoom(code, true, false);
       } catch (err) {
-        alert("Could not create space: " + err.message);
+        alert("Could not create space: " + (err?.message || err));
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-plus"></i><span>Generate Invite Code</span>`;
@@ -1465,13 +1790,16 @@
           uid: currentUser.uid,
           name: fallbackName,
           photo: "",
-          status: "💭 Set vibe...",
+          status: "💭 Set rhythm...",
+          statusUpdatedAt: Date.now(),
           location: null
         });
       }
 
+      resetSpaceData();
       await updateDoc(doc(db, "users", currentUser.uid), { roomCode: raw });
       localStorage.setItem(LOCAL_ROOM_HINT_KEY, raw);
+      localStorage.setItem(LOCAL_PREV_ROOM_KEY, raw);
       await enterRoom(raw, isNewMember, false);
     });
 
@@ -1490,14 +1818,16 @@
 
       activeRoomCode = code;
       localStorage.setItem(LOCAL_ROOM_HINT_KEY, code);
+      localStorage.setItem(LOCAL_PREV_ROOM_KEY, code);
       document.getElementById("loadingScreen").classList.add("hidden");
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("lobbyScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.remove("hidden");
 
-      document.getElementById("displayInviteCode").textContent = code;
-      document.getElementById("settingsCodeLabel").textContent = code;
-      document.getElementById("chatRoomBadge").textContent = code;
+      const inviteCodeEl = document.getElementById("displayInviteCode");
+      if (inviteCodeEl) inviteCodeEl.textContent = code;
+      const settingsCodeEl = document.getElementById("settingsCodeLabel");
+      if (settingsCodeEl) settingsCodeEl.textContent = code;
 
       startRoomListeners(code);
 
@@ -1509,6 +1839,9 @@
     document.getElementById("unlinkSpaceBtn").addEventListener("click", async () => {
       if (!confirm("Unlink from this room and return to the Create / Join lobby?")) return;
       closeAllModals();
+      if (activeRoomCode) {
+        localStorage.setItem(LOCAL_PREV_ROOM_KEY, activeRoomCode);
+      }
       localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
       if (activeRoomCode && currentUser) {
         try {
@@ -1521,6 +1854,7 @@
       allMessages = [];
       allMemories = [];
       allPosts = [];
+      resetSpaceData();
       showLobby();
     });
 
@@ -1531,23 +1865,28 @@
       setTimeout(() => (lbl.textContent = "Copy"), 1800);
     });
 
-    // ==================== REAL-TIME ROOM LISTENERS ====================
+    // ==================== DEDUPLICATED REAL-TIME ROOM LISTENERS ====================
     function startRoomListeners(code) {
       clearListeners();
+      if (!code) return;
 
       unsubscribers.push(onSnapshot(doc(db, "rooms", code), (snap) => {
         if (snap.exists()) {
-          spaceData = { ...spaceData, ...snap.data() };
+          spaceData = { ...createDefaultSpaceData(), ...snap.data() };
+          markSyncedNow();
           if (spaceData.theme) applyAppearance(currentMode, spaceData.theme);
           renderWhisper();
           updateHomeCounters();
           renderMemories();
+          renderSomedayList();
+          renderFeed(allPosts);
         }
       }));
 
       unsubscribers.push(onSnapshot(collection(db, "rooms", code, "members"), (snap) => {
         membersMap = {};
         snap.forEach((d) => { membersMap[d.id] = d.data(); });
+        markSyncedNow();
         renderProfilesAndMap();
         renderWhisper();
         renderNotifications();
@@ -1557,6 +1896,7 @@
       unsubscribers.push(onSnapshot(chatQ, (snap) => {
         allMessages = [];
         snap.forEach((d) => allMessages.push({ id: d.id, ...d.data() }));
+        markSyncedNow();
         renderChat(allMessages);
         renderNotifications();
       }));
@@ -1565,6 +1905,7 @@
       unsubscribers.push(onSnapshot(memQ, (snap) => {
         allMemories = [];
         snap.forEach((d) => allMemories.push({ id: d.id, ...d.data() }));
+        markSyncedNow();
         renderMemories();
         renderNotifications();
       }));
@@ -1573,13 +1914,14 @@
       unsubscribers.push(onSnapshot(feedQ, (snap) => {
         allPosts = [];
         snap.forEach((d) => allPosts.push({ id: d.id, ...d.data() }));
+        markSyncedNow();
         renderFeed(allPosts);
         renderNotifications();
       }));
     }
 
     function getMyProfile() {
-      return membersMap[currentUser?.uid] || { name: "", photo: "", status: "", location: null };
+      return membersMap[currentUser?.uid] || { name: "", photo: "", status: "", statusUpdatedAt: 0, location: null };
     }
 
     function getPartnerProfile() {
@@ -1587,7 +1929,7 @@
       return partnerId ? membersMap[partnerId] : null;
     }
 
-    // ==================== QUICK "THINKING OF YOU" STATUS ====================
+    // ==================== DAILY RHYTHM CHECK-IN ====================
     async function saveMyStatus(statusText) {
       if (!activeRoomCode || !currentUser) return;
       const clean = (statusText || "").trim();
@@ -1627,7 +1969,7 @@
       await saveMyStatus(val);
     });
 
-    // ==================== ROTATING WHISPERS & INSIDE NOTES ====================
+    // ==================== ROTATING WHISPERS (STRICT w.id MATCHING) ====================
     function getWhispersList() {
       const rawCustom = Array.isArray(spaceData.whispers) ? spaceData.whispers : [];
       const pinned = rawCustom.filter((w) => w.pinned);
@@ -1649,14 +1991,10 @@
       const pinIcon = document.getElementById("pinWhisperIcon");
       const delBtn = document.getElementById("deleteWhisperBtn");
 
-      if (!item.isDefault) {
+      if (!item.isDefault && item.id) {
         pinBtn.classList.remove("hidden");
         delBtn.classList.remove("hidden");
-        if (item.pinned) {
-          pinIcon.className = "fa-solid fa-star text-[10px] accent-text";
-        } else {
-          pinIcon.className = "fa-regular fa-star text-[10px]";
-        }
+        pinIcon.className = item.pinned ? "fa-solid fa-star text-[10px] accent-text" : "fa-regular fa-star text-[10px]";
       } else {
         pinBtn.classList.add("hidden");
         delBtn.classList.add("hidden");
@@ -1672,10 +2010,10 @@
 
     document.getElementById("addCustomWhisperBtn").addEventListener("click", async () => {
       if (!activeRoomCode || !currentUser) return;
-      const note = prompt("Write an inside joke or whisper for the two of you:");
+      const note = prompt("Write an inside note or whisper for the two of you:");
       if (!note || !note.trim()) return;
       const newEntry = {
-        id: `w_${Date.now()}`,
+        id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         pinned: false,
         tag: "Inside Note",
         text: `"${note.trim()}"`
@@ -1689,14 +2027,11 @@
     document.getElementById("pinWhisperBtn").addEventListener("click", async () => {
       const list = getWhispersList();
       const currentItem = list[whisperIndex];
-      if (!currentItem || currentItem.isDefault) return;
+      if (!currentItem || currentItem.isDefault || !currentItem.id) return;
 
-      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).map((w) => {
-        if ((w.id && w.id === currentItem.id) || w.text === currentItem.text) {
-          return { ...w, pinned: !w.pinned };
-        }
-        return w;
-      });
+      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).map((w) =>
+        w.id === currentItem.id ? { ...w, pinned: !w.pinned } : w
+      );
       await updateDoc(doc(db, "rooms", activeRoomCode), { whispers: updated });
       whisperIndex = 0;
     });
@@ -1704,13 +2039,12 @@
     document.getElementById("deleteWhisperBtn").addEventListener("click", async () => {
       const list = getWhispersList();
       const currentItem = list[whisperIndex];
-      if (!currentItem || currentItem.isDefault) return;
+      if (!currentItem || currentItem.isDefault || !currentItem.id) return;
       if (!confirm("Remove this saved inside note?")) return;
 
-      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).filter((w) => {
-        if (currentItem.id && w.id) return w.id !== currentItem.id;
-        return w.text !== currentItem.text;
-      });
+      const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).filter(
+        (w) => w.id !== currentItem.id
+      );
       await updateDoc(doc(db, "rooms", activeRoomCode), { whispers: updated });
       whisperIndex = 0;
     });
@@ -1844,7 +2178,7 @@
       renderNotifications();
     });
 
-    // ==================== INTERACTIVE MINI-MAP & LOCATION PERMISSION ====================
+    // ==================== INTERACTIVE MINI-MAP & DYNAMIC PINNED DISTANCE TRACK ====================
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
       const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -1939,6 +2273,31 @@
       }
     }
 
+    function updateGapMarker(kmValue, me, partner) {
+      const boxEl = document.getElementById("gapTrackerBox");
+      const leftEl = document.getElementById("gapLeftPlace");
+      const rightEl = document.getElementById("gapRightPlace");
+      const labelEl = document.getElementById("gapMarkerLabel");
+      const fillEl = document.getElementById("gapProgressFill");
+      const dotEl = document.getElementById("gapMarkerDot");
+      if (!boxEl || !labelEl || !fillEl || !dotEl) return;
+
+      if (typeof kmValue !== "number" || Number.isNaN(kmValue)) {
+        boxEl.classList.add("hidden");
+        return;
+      }
+
+      boxEl.classList.remove("hidden");
+      if (leftEl) leftEl.textContent = me?.location?.place || me?.name || "You";
+      if (rightEl) rightEl.textContent = partner?.location?.place || partner?.name || "Partner";
+
+      const clampedRatio = Math.max(0.05, Math.min(1, kmValue / DISTANCE_TRACK_SCALE_KM));
+      const pct = Math.round(clampedRatio * 100);
+      labelEl.textContent = kmValue < 1 ? `${Math.round(kmValue * 1000)} m apart` : `${kmValue.toFixed(1)} km apart`;
+      fillEl.style.width = `${pct}%`;
+      dotEl.style.left = `${Math.max(6, Math.min(94, pct))}%`;
+    }
+
     function renderProfilesAndMap() {
       const me = getMyProfile();
       const partner = getPartnerProfile();
@@ -1959,10 +2318,13 @@
       document.getElementById("myDisplayNameHero").textContent = me.name || "You";
       document.getElementById("partnerDisplayNameHero").textContent = partner?.name || "Partner";
 
-      document.getElementById("myStatusOwnerLabel").textContent = `${me.name || "Your"} vibe`;
-      document.getElementById("myStatusText").textContent = me.status || "💭 Set vibe...";
-      document.getElementById("partnerStatusOwnerLabel").textContent = `${partner?.name || "Partner"}'s vibe`;
+      document.getElementById("myStatusOwnerLabel").textContent = `${me.name || "Your"} rhythm`;
+      document.getElementById("myStatusText").textContent = me.status || "💭 Set rhythm...";
+      document.getElementById("myStatusTime").textContent = me.statusUpdatedAt ? formatTimeAgo(me.statusUpdatedAt) : "—";
+
+      document.getElementById("partnerStatusOwnerLabel").textContent = `${partner?.name || "Partner"}'s rhythm`;
       document.getElementById("partnerStatusText").textContent = partner?.status || "♡ Quietly here";
+      document.getElementById("partnerStatusTime").textContent = partner?.statusUpdatedAt ? formatTimeAgo(partner.statusUpdatedAt) : "—";
 
       const myWrap = document.getElementById("heroMyAvatarWrap");
       myWrap.innerHTML = me.photo
@@ -1970,25 +2332,18 @@
         : escapeHtml((me.name || "Me")[0].toUpperCase());
 
       const partnerWrap = document.getElementById("heroPartnerAvatarWrap");
-      const chatPartnerAvatar = document.getElementById("chatPartnerAvatarWrap");
       const inviteBanner = document.getElementById("inviteBannerCard");
 
       if (partner) {
         inviteBanner.classList.add("hidden");
-        document.getElementById("chatPartnerName").textContent = partner.name || "Partner";
-        document.getElementById("chatPartnerSub").textContent = partner.status || "Connected in Lereio";
         document.getElementById("chatInput").placeholder = `Message ${partner.name || "partner"}...`;
         const pHtml = partner.photo
           ? `<img src="${partner.photo}" class="w-full h-full object-cover">`
           : escapeHtml((partner.name || "♡")[0].toUpperCase());
         partnerWrap.innerHTML = pHtml;
-        chatPartnerAvatar.innerHTML = pHtml;
       } else {
         inviteBanner.classList.remove("hidden");
-        document.getElementById("chatPartnerName").textContent = "Waiting for partner...";
-        document.getElementById("chatPartnerSub").textContent = `Share code ${activeRoomCode}`;
         partnerWrap.innerHTML = `♡`;
-        chatPartnerAvatar.innerHTML = `♡`;
       }
 
       document.getElementById("myLocNameLabel").textContent = me.name || "You";
@@ -2019,21 +2374,26 @@
         else if (km < 1) distHeadline.textContent = `${Math.round(km * 1000)} meters apart`;
         else distHeadline.textContent = `${km.toFixed(1)} km apart`;
 
+        updateGapMarker(km, me, partner);
+
         openMapBtn.classList.remove("hidden");
         openMapBtn.onclick = () => {
           window.open(`https://www.google.com/maps/dir/${me.location.lat},${me.location.lng}/${partner.location.lat},${partner.location.lng}`, "_blank");
         };
       } else if (partner?.location) {
         distHeadline.textContent = `${partner.name || "Partner"} pinned location`;
+        updateGapMarker(null);
         openMapBtn.classList.remove("hidden");
         openMapBtn.onclick = () => {
           window.open(`https://www.google.com/maps?q=${partner.location.lat},${partner.location.lng}`, "_blank");
         };
       } else if (me.location) {
         distHeadline.textContent = "Waiting for partner's pin";
+        updateGapMarker(null);
         openMapBtn.classList.add("hidden");
       } else {
         distHeadline.textContent = "Tap update to pin location";
+        updateGapMarker(null);
         openMapBtn.classList.add("hidden");
       }
 
@@ -2041,15 +2401,18 @@
     }
 
     async function obtainCurrentCoords() {
-      const capGeo = window.Capacitor?.Plugins?.Geolocation;
-      const isNative = Boolean(window.Capacitor?.isNativePlatform?.()) || window.Capacitor?.getPlatform?.() === "android";
+      const cap = window.Capacitor;
+      const capGeo = cap?.Plugins?.Geolocation;
+      const isNative = Boolean(cap?.isNativePlatform?.());
 
-      if (isNative && capGeo) {
-        const perm = await capGeo.checkPermissions();
-        if (perm.location !== "granted" && perm.coarseLocation !== "granted") {
-          const req = await capGeo.requestPermissions();
-          if (req.location !== "granted" && req.coarseLocation !== "granted") {
-            throw new Error("Location permission was denied. Enable Location in Lereio App info.");
+      if (isNative && typeof capGeo?.getCurrentPosition === "function") {
+        if (typeof capGeo.checkPermissions === "function" && typeof capGeo.requestPermissions === "function") {
+          const perm = await capGeo.checkPermissions();
+          if (perm.location !== "granted" && perm.coarseLocation !== "granted") {
+            const req = await capGeo.requestPermissions();
+            if (req.location !== "granted" && req.coarseLocation !== "granted") {
+              throw new Error("Location permission was denied. Enable Location in Lereio App info.");
+            }
           }
         }
         const pos = await capGeo.getCurrentPosition({ enableHighAccuracy: true, timeout: 12000 });
@@ -2107,6 +2470,13 @@
         weekday: "long", month: "long", day: "numeric", year: "numeric"
       });
 
+      const syncEl = document.getElementById("lastSyncedLabel");
+      if (syncEl) {
+        syncEl.textContent = navigator.onLine === false
+          ? `Cached · ${formatTimeAgo(lastSyncedAt)}`
+          : `Synced · ${formatTimeAgo(lastSyncedAt)}`;
+      }
+
       if (!spaceData.startDate) {
         document.getElementById("counterConfiguredView").classList.add("hidden");
         document.getElementById("counterUnsetView").classList.remove("hidden");
@@ -2161,20 +2531,18 @@
       pullIcon?.classList.add("fa-spin");
       if (pullLabel) pullLabel.textContent = "Refreshing...";
 
+      markSyncedNow();
       updateHomeCounters();
       renderProfilesAndMap();
       renderWhisper();
       renderNotifications();
-      if (activeRoomCode) {
-        startRoomListeners(activeRoomCode);
-      }
 
       setTimeout(() => {
         icon?.classList.remove("fa-spin");
         pullIcon?.classList.remove("fa-spin");
         pullWrap?.classList.add("hidden");
         pullWrap?.classList.remove("flex");
-      }, 500);
+      }, 450);
     }
 
     document.getElementById("homeRefreshBtn").addEventListener("click", triggerHomeRefresh);
@@ -2217,7 +2585,7 @@
 
     setInterval(updateHomeCounters, 15000);
 
-    // ==================== MODALS ====================
+    // ==================== MODALS & PERSONAL DATA EXPORT ====================
     function openProfileEditor() {
       const me = getMyProfile();
       pendingAvatarBase64 = me.photo || "";
@@ -2265,6 +2633,91 @@
       document.getElementById("settingsModal").classList.add("hidden");
     });
 
+    function triggerFileDownload(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }
+
+    function buildSpaceBackupPayload() {
+      const me = getMyProfile();
+      const partner = getPartnerProfile();
+      return {
+        exportedAt: new Date().toISOString(),
+        roomCode: activeRoomCode || "",
+        startDate: spaceData.startDate || "",
+        members: {
+          you: { name: me.name || "", status: me.status || "" },
+          partner: partner ? { name: partner.name || "", status: partner.status || "" } : null
+        },
+        pinnedNoteId: spaceData.pinnedNoteId || "",
+        whispers: Array.isArray(spaceData.whispers) ? spaceData.whispers : [],
+        somedayItems: Array.isArray(spaceData.somedayItems) ? spaceData.somedayItems : [],
+        notes: allPosts.map((p) => ({
+          id: p.id,
+          author: p.authorUid === currentUser?.uid ? (me.name || "You") : (membersMap[p.authorUid]?.name || "Partner"),
+          content: p.content || "",
+          createdAt: p.createdAt?.toDate ? p.createdAt.toDate().toISOString() : null,
+          comments: Array.isArray(p.comments) ? p.comments : []
+        })),
+        messages: allMessages.map((m) => ({
+          id: m.id,
+          sender: m.senderUid === currentUser?.uid ? (me.name || "You") : (membersMap[m.senderUid]?.name || "Partner"),
+          text: m.text || (m.image ? "[Photo]" : ""),
+          edited: Boolean(m.edited),
+          createdAt: m.createdAt?.toDate ? m.createdAt.toDate().toISOString() : null
+        }))
+      };
+    }
+
+    document.getElementById("exportJsonBtn").addEventListener("click", () => {
+      const payload = buildSpaceBackupPayload();
+      const stamp = new Date().toISOString().slice(0, 10);
+      triggerFileDownload(
+        JSON.stringify(payload, null, 2),
+        `Lereio_${activeRoomCode || "Backup"}_${stamp}.json`,
+        "application/json;charset=utf-8"
+      );
+    });
+
+    document.getElementById("exportTxtBtn").addEventListener("click", () => {
+      const data = buildSpaceBackupPayload();
+      const stamp = new Date().toISOString().slice(0, 10);
+      const lines = [
+        `LEREIO SPACE BACKUP (${data.roomCode || "No Room"})`,
+        `Exported: ${data.exportedAt}`,
+        `Start Date: ${data.startDate || "Not set"}`,
+        `Members: ${data.members.you.name || "You"} & ${data.members.partner?.name || "Partner"}`,
+        "",
+        "=== SHARED NOTES ===",
+        ...(data.notes.length
+          ? data.notes.map((n) => `[${n.createdAt || ""}] ${n.author}: ${n.content}`)
+          : ["(No notes)"]),
+        "",
+        "=== SOMEDAY LIST ===",
+        ...(data.somedayItems.length
+          ? data.somedayItems.map((s) => `${s.done ? "[x]" : "[ ]"} ${s.text}`)
+          : ["(No items)"]),
+        "",
+        "=== CHAT MESSAGES ===",
+        ...(data.messages.length
+          ? data.messages.map((m) => `[${m.createdAt || ""}] ${m.sender}${m.edited ? " (edited)" : ""}: ${m.text}`)
+          : ["(No messages)"])
+      ];
+
+      triggerFileDownload(
+        lines.join("\n"),
+        `Lereio_${activeRoomCode || "Backup"}_${stamp}.txt`,
+        "text/plain;charset=utf-8"
+      );
+    });
+
     // ==================== BOTTOM ICON NAVIGATION ====================
     function switchTab(tabName) {
       activeTab = tabName;
@@ -2291,6 +2744,7 @@
         setLastSeenEntry("memories", Date.now());
       } else if (tabName === "feed") {
         setLastSeenEntry("feed", Date.now());
+        renderSomedayList();
       } else if (tabName === "home" && leafletMap) {
         setTimeout(() => leafletMap.invalidateSize(), 100);
       }
@@ -2377,9 +2831,14 @@
       `;
     }
 
-    // ==================== CHAT (SEND, REACT, FULLSCREEN PHOTO, EDIT, DELETE) ====================
+    // ==================== CHAT (SMART SCROLL + REACTIONS + FULLSCREEN PHOTO) ====================
     function renderChat(messages) {
       const container = document.getElementById("chatMessagesContainer");
+      const prevScrollTop = container.scrollTop;
+      const prevScrollHeight = container.scrollHeight;
+      const wasNearBottom = prevScrollHeight - (prevScrollTop + container.clientHeight) < 90;
+      const isInitialEmpty = prevScrollHeight === 0;
+
       if (messages.length === 0) {
         container.innerHTML = `
           <div class="h-full flex flex-col items-center justify-center text-center px-6 opacity-75">
@@ -2479,7 +2938,11 @@
           const updatedText = prompt("Edit message:", msg.text);
           if (updatedText === null) return;
           const clean = updatedText.trim();
-          if (!clean || clean === msg.text) return;
+          if (!clean) {
+            alert("Message cannot be empty. Tap the trash icon to delete it instead.");
+            return;
+          }
+          if (clean === msg.text) return;
           await updateDoc(doc(db, "rooms", activeRoomCode, "messages", msg.id), {
             text: clean,
             edited: true
@@ -2494,7 +2957,12 @@
         });
       });
 
-      container.scrollTop = container.scrollHeight;
+      if (userSentNewChat || wasNearBottom || isInitialEmpty) {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        container.scrollTop = prevScrollTop;
+      }
+      userSentNewChat = false;
     }
 
     document.getElementById("chatForm").addEventListener("submit", async (e) => {
@@ -2503,6 +2971,7 @@
       const text = input.value.trim();
       if (!text) return;
       input.value = "";
+      userSentNewChat = true;
       await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
         senderUid: currentUser.uid,
         text,
@@ -2515,6 +2984,7 @@
       const file = e.target.files[0];
       if (!file) return;
       const base64 = await compressImage(file, 1360, 0.85);
+      userSentNewChat = true;
       await addDoc(collection(db, "rooms", activeRoomCode, "messages"), {
         senderUid: currentUser.uid,
         image: base64,
@@ -2633,9 +3103,51 @@
       e.target.value = "";
     });
 
-    // ==================== NOTES / WALL (COMPACT REACTIONS + EMOJI PICKER) ====================
+    // ==================== NOTES, PINNED NOTE & SHARED SOMEDAY LIST ====================
+    function setNotesSubView(mode) {
+      const notesBtn = document.getElementById("subtabNotesBtn");
+      const somedayBtn = document.getElementById("subtabSomedayBtn");
+      const notesView = document.getElementById("notesSubView");
+      const somedayView = document.getElementById("somedaySubView");
+
+      if (mode === "someday") {
+        somedayBtn.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
+        notesBtn.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
+        notesView.classList.add("hidden");
+        somedayView.classList.remove("hidden");
+        renderSomedayList();
+      } else {
+        notesBtn.className = "py-2 rounded-xl text-xs font-semibold accent-bg transition";
+        somedayBtn.className = "py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition";
+        somedayView.classList.add("hidden");
+        notesView.classList.remove("hidden");
+      }
+    }
+
+    document.getElementById("subtabNotesBtn").addEventListener("click", () => setNotesSubView("notes"));
+    document.getElementById("subtabSomedayBtn").addEventListener("click", () => setNotesSubView("someday"));
+
+    document.getElementById("unpinNoteBtn").addEventListener("click", async () => {
+      if (!activeRoomCode) return;
+      await updateDoc(doc(db, "rooms", activeRoomCode), { pinnedNoteId: "" });
+    });
+
     function renderFeed(posts) {
       const list = document.getElementById("feedPostsList");
+      const pinnedBanner = document.getElementById("pinnedNoteBanner");
+      const pinnedText = document.getElementById("pinnedNoteText");
+
+      const pinnedPost = spaceData.pinnedNoteId
+        ? posts.find((p) => p.id === spaceData.pinnedNoteId)
+        : null;
+
+      if (pinnedPost) {
+        pinnedText.textContent = pinnedPost.content || "";
+        pinnedBanner.classList.remove("hidden");
+      } else {
+        pinnedBanner.classList.add("hidden");
+      }
+
       if (posts.length === 0) {
         list.innerHTML = `
           <div class="surface-card p-8 text-center space-y-1">
@@ -2652,6 +3164,7 @@
         const displayAuthor = isMe ? "You" : (authorProf.name || "Partner");
         const reactions = post.reactions || {};
         const comments = post.comments || [];
+        const isPinned = spaceData.pinnedNoteId === post.id;
 
         const avatarHtml = authorProf.photo
           ? `<img src="${authorProf.photo}" class="w-7 h-7 rounded-full object-cover">`
@@ -2680,10 +3193,16 @@
                 ${avatarHtml}
                 <span class="text-xs font-semibold text-[var(--text-main)]">${escapeHtml(displayAuthor)}</span>
               </div>
-              ${isMe ? `
-                <button data-del="${post.id}" class="del-post-btn text-[var(--text-muted)] hover:text-rose-400 text-xs">
-                  <i class="fa-regular fa-trash-can"></i>
-                </button>` : ""}
+              <div class="flex items-center gap-2.5">
+                <button type="button" data-pin-post="${post.id}" title="${isPinned ? "Unpin shared note" : "Pin note for both of you"}"
+                  class="pin-post-btn text-xs ${isPinned ? "accent-text" : "text-[var(--text-muted)] hover:accent-text"}">
+                  <i class="fa-solid fa-thumbtack"></i>
+                </button>
+                ${isMe ? `
+                  <button data-del="${post.id}" class="del-post-btn text-[var(--text-muted)] hover:text-rose-400 text-xs">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>` : ""}
+              </div>
             </div>
 
             <p class="text-sm text-[var(--text-main)]/95 leading-relaxed">${escapeHtml(post.content)}</p>
@@ -2717,6 +3236,14 @@
         `;
       }).join("");
 
+      list.querySelectorAll(".pin-post-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetId = btn.dataset.pinPost;
+          const nextPinned = spaceData.pinnedNoteId === targetId ? "" : targetId;
+          await updateDoc(doc(db, "rooms", activeRoomCode), { pinnedNoteId: nextPinned });
+        });
+      });
+
       list.querySelectorAll(".react-post-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
           await toggleTargetReaction("posts", btn.dataset.reactPost, btn.dataset.emoji);
@@ -2742,7 +3269,11 @@
 
       list.querySelectorAll(".del-post-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          await deleteDoc(doc(db, "rooms", activeRoomCode, "posts", btn.dataset.del));
+          const delId = btn.dataset.del;
+          await deleteDoc(doc(db, "rooms", activeRoomCode, "posts", delId));
+          if (spaceData.pinnedNoteId === delId) {
+            await updateDoc(doc(db, "rooms", activeRoomCode), { pinnedNoteId: "" });
+          }
         });
       });
     }
@@ -2759,6 +3290,69 @@
         comments: [],
         createdAt: serverTimestamp()
       });
+    });
+
+    function renderSomedayList() {
+      const container = document.getElementById("somedayListContainer");
+      if (!container) return;
+      const items = Array.isArray(spaceData.somedayItems) ? spaceData.somedayItems : [];
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="surface-card p-6 text-center space-y-1">
+            <p class="font-editorial text-2xl text-[var(--text-main)]">Nothing on your Someday List yet</p>
+            <p class="text-xs text-[var(--text-muted)]">Add spots or moments you want to experience together.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map((item) => `
+        <div class="surface-card p-3 flex items-center justify-between gap-2.5">
+          <button type="button" data-toggle-someday="${item.id}" class="toggle-someday-btn flex items-center gap-2.5 text-left flex-1 min-w-0">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center border ${item.done ? "accent-bg border-transparent" : "border-[var(--text-muted)]"} shrink-0">
+              ${item.done ? `<i class="fa-solid fa-check text-[9px]"></i>` : ""}
+            </span>
+            <span class="text-xs break-words ${item.done ? "line-through text-[var(--text-muted)]" : "text-[var(--text-main)]"}">${escapeHtml(item.text)}</span>
+          </button>
+          <button type="button" data-del-someday="${item.id}" class="del-someday-btn text-[var(--text-muted)] hover:text-rose-400 text-xs shrink-0">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      `).join("");
+
+      container.querySelectorAll(".toggle-someday-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetId = btn.dataset.toggleSomeday;
+          const updated = items.map((it) => it.id === targetId ? { ...it, done: !it.done } : it);
+          await updateDoc(doc(db, "rooms", activeRoomCode), { somedayItems: updated });
+        });
+      });
+
+      container.querySelectorAll(".del-someday-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetId = btn.dataset.delSomeday;
+          const updated = items.filter((it) => it.id !== targetId);
+          await updateDoc(doc(db, "rooms", activeRoomCode), { somedayItems: updated });
+        });
+      });
+    }
+
+    document.getElementById("somedayForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!activeRoomCode || !currentUser) return;
+      const input = document.getElementById("somedayInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      const newItem = {
+        id: `sd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        text,
+        done: false,
+        addedBy: currentUser.uid
+      };
+      const updated = [newItem, ...(Array.isArray(spaceData.somedayItems) ? spaceData.somedayItems : [])];
+      await updateDoc(doc(db, "rooms", activeRoomCode), { somedayItems: updated });
     });
   </script>
 </body>
