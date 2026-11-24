@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lereio — Private Space for Two</title>
 
   <!-- Tailwind CSS -->
@@ -35,6 +35,8 @@
       --accent-soft: rgba(96, 165, 250, 0.14);
       --accent-glow: rgba(96, 165, 250, 0.11);
       --bottom-nav-height: 68px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
     }
 
     * {
@@ -66,12 +68,19 @@
       background-image: radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 60%);
     }
 
+    @media (max-width: 767px) {
+      .app-shell { height: var(--app-h, 100dvh); max-height: var(--app-h, 100dvh); }
+    }
+
     @media (min-width: 768px) {
       .app-shell {
         height: 92dvh;
         max-height: 92dvh;
       }
     }
+
+    body.kb-open nav { display: none; }
+    body.kb-open #tab-chat.active-chat { padding-bottom: 0; }
 
     .surface-card {
       background-color: var(--bg-card);
@@ -139,7 +148,7 @@
       flex: 1 1 0%;
       min-height: 0;
       overflow: hidden;
-      padding-bottom: var(--bottom-nav-height);
+      padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
     }
 
     #chatMessagesContainer {
@@ -158,11 +167,27 @@
       background-color: var(--bg-card);
       border-top: 1px solid var(--border-soft);
     }
+
+    .hit-area:not(.absolute) { position: relative; }
+    .hit-area::after { content: ""; position: absolute; inset: -10px; }
   </style>
 </head>
 <body class="flex items-center justify-center">
 
   <div class="app-shell w-full max-w-[430px] md:rounded-[34px] md:border md:border-slate-500/20 md:shadow-2xl relative flex flex-col overflow-hidden">
+
+    <div id="dialogModal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-5">
+      <form id="dialogForm" class="surface-card w-full max-w-xs p-5 space-y-4">
+        <h3 id="dialogTitle" class="font-editorial text-2xl text-[var(--text-main)]"></h3>
+        <p id="dialogMessage" class="text-xs text-[var(--text-muted)] leading-relaxed"></p>
+        <input id="dialogInput" type="text" autocomplete="off"
+          class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
+        <div class="flex gap-2 justify-end">
+          <button type="button" id="dialogCancelBtn" class="px-4 py-2.5 rounded-xl surface-pill text-xs font-semibold text-[var(--text-main)]">Cancel</button>
+          <button type="submit" id="dialogOkBtn" class="px-4 py-2.5 rounded-xl accent-bg text-xs font-semibold">OK</button>
+        </div>
+      </form>
+    </div>
 
     <!-- ==================== STARTUP LOADING SCREEN ==================== -->
     <div id="loadingScreen" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -350,7 +375,7 @@
     <div id="mainApp" class="hidden flex-1 flex flex-col min-h-0 overflow-hidden">
 
       <!-- Clean Top Header with Offline-Only Pill, Notification Bell, Profile & Settings -->
-      <header class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0 z-20 bg-[var(--bg-base)]/90 backdrop-blur-sm">
+      <header style="padding-top: max(1rem, var(--safe-top));" class="px-4 pb-3 flex items-center justify-between border-b border-[var(--border-soft)] shrink-0 z-20 bg-[var(--bg-base)]/90 backdrop-blur-sm">
         <div class="flex items-center gap-2 min-w-0">
           <span class="w-2 h-2 rounded-full accent-bg shrink-0"></span>
           <span class="font-editorial text-2xl tracking-wide text-[var(--text-main)]">Lereio</span>
@@ -368,12 +393,12 @@
             <i class="fa-solid fa-pen text-[9px] text-[var(--text-muted)]"></i>
           </button>
 
-          <button id="openNotificationsBtn" class="relative w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Activity & Notifications">
+          <button id="openNotificationsBtn" class="relative w-10 h-10 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Activity & Notifications">
             <i class="fa-regular fa-bell text-xs accent-text"></i>
             <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full accent-bg text-[9px] font-bold flex items-center justify-center">0</span>
           </button>
 
-          <button id="openSettingsBtn" class="w-8 h-8 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Space & Theme Settings">
+          <button id="openSettingsBtn" class="w-10 h-10 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition" title="Space & Theme Settings">
             <i class="fa-solid fa-sliders text-xs accent-text"></i>
           </button>
         </div>
@@ -436,6 +461,38 @@
             </div>
           </div>
 
+          <!-- Thinking of you -->
+          <button type="button" id="thinkingOfYouBtn" class="surface-card w-full p-4 flex items-center justify-center gap-2.5 border border-[var(--accent)]/40 active:scale-[0.98] transition">
+            <i class="fa-solid fa-heart accent-text text-lg"></i>
+            <span id="thinkingOfYouLabel" class="text-sm font-semibold text-[var(--text-main)]">Thinking of you</span>
+          </button>
+
+          <!-- Local times -->
+          <div class="surface-card p-4 grid grid-cols-2 gap-2.5">
+            <div class="surface-pill rounded-2xl p-3">
+              <p id="myTimeLabel" class="text-[11px] font-semibold accent-text truncate">You</p>
+              <p id="myTimeText" class="font-editorial text-3xl text-[var(--text-main)] leading-none mt-1">—</p>
+              <p id="myTimeNote" class="text-[10px] text-[var(--text-muted)] mt-1 truncate">&nbsp;</p>
+            </div>
+            <div class="surface-pill rounded-2xl p-3">
+              <p id="partnerTimeLabel" class="text-[11px] font-semibold accent-text truncate">Partner</p>
+              <p id="partnerTimeText" class="font-editorial text-3xl text-[var(--text-main)] leading-none mt-1">—</p>
+              <p id="partnerTimeNote" class="text-[10px] text-[var(--text-muted)] mt-1 truncate">&nbsp;</p>
+            </div>
+          </div>
+
+          <!-- Next meetup -->
+          <button type="button" id="meetupCard" class="surface-card w-full p-4 flex items-center justify-between gap-3 text-left">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-wider accent-text font-semibold">Next time we see each other</p>
+              <p id="meetupCountdown" class="font-editorial text-3xl text-[var(--text-main)] mt-0.5">Tap to set a date</p>
+              <p id="meetupDateText" class="text-[11px] text-[var(--text-muted)] truncate"></p>
+            </div>
+            <span class="w-10 h-10 rounded-2xl accent-soft-bg flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-plane-arrival"></i>
+            </span>
+          </button>
+
           <!-- Rotating Whispers & Inside Notes Card -->
           <div class="surface-card p-4 space-y-2 border-l-2 border-l-[var(--accent)]">
             <div class="flex items-center justify-between gap-2">
@@ -446,16 +503,16 @@
                 <span id="whisperTagLabel" class="text-[10px] uppercase tracking-[0.18em] accent-text font-semibold truncate">Inside Whisper</span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
-                <button type="button" id="pinWhisperBtn" class="hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Pin / Unpin note">
+                <button type="button" id="pinWhisperBtn" class="hit-area hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Pin / Unpin note">
                   <i id="pinWhisperIcon" class="fa-regular fa-star text-[10px]"></i>
                 </button>
-                <button type="button" id="deleteWhisperBtn" class="hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-rose-400 transition" title="Delete note">
+                <button type="button" id="deleteWhisperBtn" class="hit-area hidden w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:text-rose-400 transition" title="Delete note">
                   <i class="fa-regular fa-trash-can text-[10px]"></i>
                 </button>
-                <button type="button" id="addCustomWhisperBtn" class="w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Save an inside note for us">
+                <button type="button" id="addCustomWhisperBtn" class="hit-area w-7 h-7 rounded-full surface-pill flex items-center justify-center text-[var(--text-muted)] hover:accent-text transition" title="Save an inside note for us">
                   <i class="fa-solid fa-plus text-[10px]"></i>
                 </button>
-                <button type="button" id="cycleWhisperBtn" class="w-7 h-7 rounded-full surface-pill flex items-center justify-center accent-text hover:opacity-90 transition" title="Next whisper">
+                <button type="button" id="cycleWhisperBtn" class="hit-area w-7 h-7 rounded-full surface-pill flex items-center justify-center accent-text hover:opacity-90 transition" title="Next whisper">
                   <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                 </button>
               </div>
@@ -693,7 +750,7 @@
       </main>
 
       <!-- Bottom Icon Navigation Bar -->
-      <nav style="background-color: var(--nav-bg); height: var(--bottom-nav-height);" class="fixed md:absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 flex items-center justify-between z-30">
+      <nav style="background-color: var(--nav-bg); height: calc(var(--bottom-nav-height) + var(--safe-bottom)); padding-bottom: var(--safe-bottom);" class="fixed md:absolute bottom-0 inset-x-0 backdrop-blur-md border-t border-[var(--border-soft)] px-6 flex items-center justify-between z-30">
         <button data-tab="home" class="nav-btn flex flex-col items-center gap-1 accent-text">
           <i class="fa-solid fa-house text-base"></i>
           <span class="text-[10px] font-medium">Home</span>
@@ -887,6 +944,17 @@
           <input id="anniversaryInput" type="date" class="w-full bg-[var(--bg-elevated)] text-sm text-[var(--text-main)] rounded-xl px-3.5 py-2.5 border border-[var(--border-soft)] focus:outline-none focus:border-[var(--accent)]">
         </div>
 
+        <div class="surface-pill rounded-2xl p-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-[var(--text-main)]">Share my location</p>
+            <p id="shareLocSub" class="text-[11px] text-[var(--text-muted)]">On — your partner can see where you are</p>
+          </div>
+          <button type="button" id="shareLocToggle" role="switch" aria-checked="true" aria-label="Share my location"
+            class="relative w-12 h-7 rounded-full shrink-0 transition">
+            <span id="shareLocKnob" class="absolute top-0.5 left-0.5 w-6 h-6 rounded-full transition-transform"></span>
+          </button>
+        </div>
+
         <!-- Optional 4-Digit Privacy PIN Lock -->
         <div class="surface-pill rounded-2xl p-3 flex items-center justify-between gap-2">
           <div>
@@ -947,7 +1015,7 @@
     import {
       initializeFirestore, persistentLocalCache,
       doc, setDoc, getDoc, updateDoc, deleteDoc,
-      collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, arrayUnion, arrayRemove
+      collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1023,7 +1091,8 @@
         memberUids: [],
         whispers: [],
         pinnedNoteId: "",
-        somedayItems: []
+        somedayItems: [],
+        nextMeetup: ""
       };
     }
 
@@ -1032,6 +1101,7 @@
     let allMessages = [];
     let allMemories = [];
     let allPosts = [];
+    let allPings = [];
     let selectedAlbum = "All";
     let whisperIndex = 0;
     let pendingAvatarBase64 = null;
@@ -1171,17 +1241,17 @@
       updatePinDots();
     });
 
-    document.getElementById("setPinLockBtn").addEventListener("click", () => {
-      const pin = prompt("Enter a new 4-digit PIN (numbers only):");
+    document.getElementById("setPinLockBtn").addEventListener("click", async () => {
+      const pin = await askText("New 4-digit PIN", { placeholder: "1234", inputMode: "numeric", maxLength: 4 });
       if (pin === null) return;
       const clean = pin.trim();
       if (!/^\d{4}$/.test(clean)) {
-        alert("Please enter exactly 4 digits (for example: 1423).");
+        await showAlert("Please enter exactly 4 digits, like 1423.");
         return;
       }
       localStorage.setItem(LOCAL_PIN_KEY, clean);
       refreshPinSettingsUI();
-      alert("4-digit Privacy PIN enabled on this device.");
+      await showAlert("PIN is on for this device.", "Done");
     });
 
     document.getElementById("removePinLockBtn").addEventListener("click", () => {
@@ -1267,7 +1337,7 @@
           label.textContent = "Save";
           return;
         }
-        alert("Could not save photo: " + (err?.message || err));
+        await showAlert("Could not save photo: " + (err?.message || err));
         label.textContent = "Save";
       }
     });
@@ -1364,6 +1434,56 @@
       div.textContent = str || "";
       return div.innerHTML;
     }
+
+    let dialogDone = null;
+    let dialogCancelFn = null;
+
+    function openDialog({ title = "", message = "", input = false, value = "", placeholder = "",
+                          okText = "OK", cancelText = "Cancel", showCancel = true,
+                          inputMode = "text", maxLength = 500, inputType = "text" }) {
+      return new Promise((resolve) => {
+        if (dialogCancelFn) dialogCancelFn();
+        const modal = document.getElementById("dialogModal");
+        const inputEl = document.getElementById("dialogInput");
+        const msgEl = document.getElementById("dialogMessage");
+
+        document.getElementById("dialogTitle").textContent = title;
+        msgEl.textContent = message;
+        msgEl.classList.toggle("hidden", !message);
+        inputEl.classList.toggle("hidden", !input);
+        inputEl.type = inputType;
+        inputEl.value = value;
+        inputEl.placeholder = placeholder;
+        inputEl.inputMode = inputMode;
+        inputEl.maxLength = maxLength;
+        document.getElementById("dialogOkBtn").textContent = okText;
+        const cancelBtn = document.getElementById("dialogCancelBtn");
+        cancelBtn.textContent = cancelText;
+        cancelBtn.classList.toggle("hidden", !showCancel);
+
+        const finish = (result) => {
+          modal.classList.add("hidden");
+          dialogDone = null;
+          dialogCancelFn = null;
+          resolve(result);
+        };
+        dialogDone = () => finish(input ? inputEl.value : true);
+        dialogCancelFn = () => finish(input ? null : false);
+
+        modal.classList.remove("hidden");
+        if (input) setTimeout(() => inputEl.focus(), 60);
+      });
+    }
+
+    const askText = (title, opts = {}) => openDialog({ title, input: true, ...opts });
+    const askConfirm = (title, message = "", opts = {}) => openDialog({ title, message, ...opts });
+    const showAlert = (message, title = "Heads up") => openDialog({ title, message, showCancel: false });
+
+    document.getElementById("dialogForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      dialogDone?.();
+    });
+    document.getElementById("dialogCancelBtn").addEventListener("click", () => dialogCancelFn?.());
 
     function compressImage(file, maxWidth = 1360, quality = 0.85) {
       return new Promise((resolve) => {
@@ -1528,6 +1648,7 @@
     });
 
     const handleSignOut = async () => {
+      await removeMyPushToken();
       closeAllModals();
       clearListeners();
       activeRoomCode = "";
@@ -1535,6 +1656,7 @@
       allMessages = [];
       allMemories = [];
       allPosts = [];
+      allPings = [];
       resetSpaceData();
       localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
       await signOut(auth);
@@ -1571,6 +1693,7 @@
         allMessages = [];
         allMemories = [];
         allPosts = [];
+        allPings = [];
         resetSpaceData();
         clearListeners();
         loadingEl.classList.add("hidden");
@@ -1731,6 +1854,7 @@
           whispers: [],
           pinnedNoteId: "",
           somedayItems: [],
+          nextMeetup: "",
           memberUids: [currentUser.uid],
           createdAt: serverTimestamp()
         });
@@ -1750,7 +1874,7 @@
         localStorage.setItem(LOCAL_PREV_ROOM_KEY, code);
         await enterRoom(code, true, false);
       } catch (err) {
-        alert("Could not create space: " + (err?.message || err));
+        await showAlert("Could not create space: " + (err?.message || err));
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-plus"></i><span>Generate Invite Code</span>`;
@@ -1834,6 +1958,8 @@
       if (settingsCodeEl) settingsCodeEl.textContent = code;
 
       startRoomListeners(code);
+      saveMyTimezone();
+      setTimeout(setupPush, 1500);
       setTimeout(() => maybeAutoRefreshLocation(), 1200);
 
       if (promptProfileSetup) {
@@ -1842,12 +1968,13 @@
     }
 
     document.getElementById("unlinkSpaceBtn").addEventListener("click", async () => {
-      if (!confirm("Unlink from this room and return to the Create / Join lobby?")) return;
+      if (!(await askConfirm("Unlink this space?", "You'll go back to the Create / Join lobby.", { okText: "Unlink" }))) return;
       closeAllModals();
       if (activeRoomCode) {
         localStorage.setItem(LOCAL_PREV_ROOM_KEY, activeRoomCode);
       }
       localStorage.removeItem(LOCAL_ROOM_HINT_KEY);
+      await removeMyPushToken();
       if (activeRoomCode && currentUser) {
         try {
           await updateDoc(doc(db, "rooms", activeRoomCode), { memberUids: arrayRemove(currentUser.uid) });
@@ -1859,6 +1986,7 @@
       allMessages = [];
       allMemories = [];
       allPosts = [];
+      allPings = [];
       resetSpaceData();
       showLobby();
     });
@@ -1874,6 +2002,7 @@
     function startRoomListeners(code) {
       clearListeners();
       if (!code) return;
+      allPings = [];
 
       unsubscribers.push(onSnapshot(doc(db, "rooms", code), (snap) => {
         if (snap.exists()) {
@@ -1885,6 +2014,7 @@
           renderMemories();
           renderSomedayList();
           renderFeed(allPosts);
+          renderMeetup();
         }
       }));
 
@@ -1921,6 +2051,14 @@
         snap.forEach((d) => allPosts.push({ id: d.id, ...d.data() }));
         markSyncedNow();
         renderFeed(allPosts);
+        renderNotifications();
+      }));
+
+      const pingQ = query(collection(db, "rooms", code, "pings"), orderBy("createdAt", "desc"), limit(20));
+      unsubscribers.push(onSnapshot(pingQ, (snap) => {
+        allPings = [];
+        snap.forEach((d) => allPings.push({ id: d.id, ...d.data() }));
+        markSyncedNow();
         renderNotifications();
       }));
     }
@@ -2015,7 +2153,7 @@
 
     document.getElementById("addCustomWhisperBtn").addEventListener("click", async () => {
       if (!activeRoomCode || !currentUser) return;
-      const note = prompt("Write an inside note or whisper for the two of you:");
+      const note = await askText("Inside note", { placeholder: "Write something for the two of you" });
       if (!note || !note.trim()) return;
       const newEntry = {
         id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -2045,7 +2183,7 @@
       const list = getWhispersList();
       const currentItem = list[whisperIndex];
       if (!currentItem || currentItem.isDefault || !currentItem.id) return;
-      if (!confirm("Remove this saved inside note?")) return;
+      if (!(await askConfirm("Remove this note?", "", { okText: "Remove" }))) return;
 
       const updated = (Array.isArray(spaceData.whispers) ? spaceData.whispers : []).filter(
         (w) => w.id !== currentItem.id
@@ -2099,6 +2237,21 @@
           icon: "fa-solid fa-feather-pointed",
           title: `${authorName} left a note`,
           detail: p.content || "",
+          ts
+        });
+      });
+
+      allPings.forEach((p) => {
+        if (!currentUser || p.senderUid === currentUser.uid) return;
+        const name = membersMap[p.senderUid]?.name || "Partner";
+        const ts = p.createdAt?.toDate ? p.createdAt.toDate().getTime() : Date.now();
+        items.push({
+          id: `ping_${p.id}`,
+          category: "pings",
+          targetTab: "home",
+          icon: "fa-solid fa-heart",
+          title: `${name} is thinking of you`,
+          detail: "Sent you a heart ♡",
           ts
         });
       });
@@ -2178,7 +2331,8 @@
       localStorage.setItem(getLastSeenKey(), JSON.stringify({
         chat: nowTs,
         memories: nowTs,
-        feed: nowTs
+        feed: nowTs,
+        pings: nowTs
       }));
       renderNotifications();
     });
@@ -2366,7 +2520,7 @@
         document.getElementById("partnerLocPlaceText").textContent = partner.location.place || "Pinned";
         document.getElementById("partnerLocTimeText").textContent = formatTimeAgo(partner.location.updatedAt);
       } else {
-        document.getElementById("partnerLocPlaceText").textContent = "Not shared yet";
+        document.getElementById("partnerLocPlaceText").textContent = partner?.shareLocation === false ? "Paused sharing" : "Not shared yet";
         document.getElementById("partnerLocTimeText").textContent = "—";
       }
 
@@ -2403,6 +2557,8 @@
       }
 
       renderInteractiveMap(me, partner);
+      renderLocalTimes();
+      renderShareLocationUI();
     }
 
     async function obtainCurrentCoords() {
@@ -2437,8 +2593,12 @@
       });
     }
 
-    async function refreshMyLocationPin({ silent = false } = {}) {
+    async function refreshMyLocationPin({ silent = false, force = false } = {}) {
       if (!activeRoomCode || !currentUser) return;
+      if (!force && getMyProfile().shareLocation === false) {
+        if (!silent) await showAlert("Location sharing is paused. Turn it on in Settings first.");
+        return;
+      }
       const icon = document.getElementById("locSpinIcon");
       icon?.classList.add("fa-spin");
 
@@ -2453,12 +2613,13 @@
           place = addr.suburb || addr.neighbourhood || addr.village || addr.city || addr.town || addr.county || place;
         } catch (_) {}
 
+        if (!force && getMyProfile().shareLocation === false) return;
         await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
           location: { lat, lng, place, updatedAt: Date.now() }
         });
       } catch (err) {
         if (!silent) {
-          alert("Please allow location permission: " + (err?.message || err));
+          await showAlert("Please allow location permission: " + (err?.message || err));
         }
       } finally {
         icon?.classList.remove("fa-spin");
@@ -2469,6 +2630,7 @@
       if (!activeRoomCode || !currentUser) return;
       const me = getMyProfile();
       if (!me?.location) return;
+      if (me.shareLocation === false) return;
 
       const now = Date.now();
       const lastPinTime = me.location.updatedAt || 0;
@@ -2520,7 +2682,9 @@
       const diffMs = Math.max(0, now - start);
       const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const weeks = Math.floor(totalDays / 7);
-      const months = Math.floor(totalDays / 30.4375);
+      let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+      if (now.getDate() < start.getDate()) months--;
+      months = Math.max(0, months);
       const years = Math.floor(totalDays / 365.25);
 
       document.getElementById("daysCount").textContent = totalDays;
@@ -2532,15 +2696,24 @@
       const circumference = 427.25;
       document.getElementById("yearProgressRing").style.strokeDashoffset = circumference - (daysIntoYear / 365) * circumference;
 
-      let nextAnniv = new Date(now.getFullYear(), start.getMonth(), start.getDate());
-      if (nextAnniv < now) nextAnniv.setFullYear(now.getFullYear() + 1);
-      const daysToAnniv = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const DAY_MS = 1000 * 60 * 60 * 24;
+
+      // Anniversary (compare days only)
+      let nextAnniv = new Date(today.getFullYear(), start.getMonth(), start.getDate());
+      if (nextAnniv < today) nextAnniv.setFullYear(today.getFullYear() + 1);
+      const daysToAnniv = Math.round((nextAnniv - today) / DAY_MS);
       document.getElementById("anniversaryCountdown").textContent =
         daysToAnniv === 0 ? "Today! ♡" : `In ${daysToAnniv} ${daysToAnniv === 1 ? "day" : "days"}`;
 
-      let nextMonth = new Date(now.getFullYear(), now.getMonth(), start.getDate());
-      if (nextMonth < now) nextMonth.setMonth(now.getMonth() + 1);
-      const daysToMonth = Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
+      // Monthsary (if started on the 31st, short months use their last day)
+      const monthsaryOn = (year, month) => {
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        return new Date(year, month, Math.min(start.getDate(), lastDay));
+      };
+      let nextMonth = monthsaryOn(today.getFullYear(), today.getMonth());
+      if (nextMonth < today) nextMonth = monthsaryOn(today.getFullYear(), today.getMonth() + 1);
+      const daysToMonth = Math.round((nextMonth - today) / DAY_MS);
       document.getElementById("monthsaryLabel").textContent = `Monthsary #${months + 1}`;
       document.getElementById("monthsaryCountdown").textContent =
         daysToMonth === 0 ? "Today! ♡" : `In ${daysToMonth} ${daysToMonth === 1 ? "day" : "days"}`;
@@ -2636,7 +2809,10 @@
 
     document.getElementById("saveProfileBtn").addEventListener("click", async () => {
       const newName = document.getElementById("profileNameInput").value.trim();
-      if (!newName) return alert("Please enter your nickname.");
+      if (!newName) {
+        await showAlert("Please enter your nickname.");
+        return;
+      }
       await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
         name: newName,
         photo: pendingAvatarBase64 || ""
@@ -2773,6 +2949,7 @@
         setLastSeenEntry("feed", Date.now());
         renderSomedayList();
       } else if (tabName === "home") {
+        setLastSeenEntry("pings", Date.now());
         if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 100);
         maybeAutoRefreshLocation();
       }
@@ -2892,7 +3069,7 @@
             <div class="flex flex-col items-end group">
               <div class="flex items-center gap-1.5 max-w-[86%]">
                 <button type="button" data-open-msg-picker="${msg.id}" title="React"
-                  class="open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
+                  class="hit-area open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
                   <i class="fa-regular fa-face-smile"></i>
                 </button>
                 ${msg.image
@@ -2901,12 +3078,12 @@
                 }
               </div>
               ${badgesHtml}
-              <div class="flex items-center gap-2 mt-1 pr-1">
+              <div class="flex items-center gap-0 mt-1 pr-1">
                 ${!msg.image ? `
-                  <button type="button" data-edit-msg="${msg.id}" class="edit-msg-btn text-[10px] text-[var(--text-muted)] hover:accent-text" title="Edit message">
+                  <button type="button" data-edit-msg="${msg.id}" class="edit-msg-btn p-3 text-sm text-[var(--text-muted)] hover:accent-text" title="Edit message">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>` : ""}
-                <button type="button" data-del-msg="${msg.id}" class="del-msg-btn text-[10px] text-[var(--text-muted)] hover:text-rose-400" title="Delete message">
+                <button type="button" data-del-msg="${msg.id}" class="del-msg-btn p-3 text-sm text-[var(--text-muted)] hover:text-rose-400" title="Delete message">
                   <i class="fa-regular fa-trash-can"></i>
                 </button>
                 <span class="text-[10px] text-[var(--text-muted)]">${timeStr}${editedLabel}</span>
@@ -2928,7 +3105,7 @@
                     : `<div class="px-4 py-2.5 rounded-2xl rounded-bl-sm surface-card text-[var(--text-main)] text-sm break-words">${escapeHtml(msg.text)}</div>`
                   }
                   <button type="button" data-open-msg-picker="${msg.id}" title="React"
-                    class="open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
+                    class="hit-area open-msg-picker-btn w-6 h-6 rounded-full surface-pill text-[10px] text-[var(--text-muted)] hover:accent-text flex items-center justify-center shrink-0">
                     <i class="fa-regular fa-face-smile"></i>
                   </button>
                 </div>
@@ -2963,11 +3140,11 @@
         btn.addEventListener("click", async () => {
           const msg = messages.find((m) => m.id === btn.dataset.editMsg);
           if (!msg || !msg.text) return;
-          const updatedText = prompt("Edit message:", msg.text);
+          const updatedText = await askText("Edit message", { value: msg.text });
           if (updatedText === null) return;
           const clean = updatedText.trim();
           if (!clean) {
-            alert("Message cannot be empty. Tap the trash icon to delete it instead.");
+            await showAlert("Message can't be empty. Tap the trash icon to delete it instead.");
             return;
           }
           if (clean === msg.text) return;
@@ -2980,7 +3157,7 @@
 
       container.querySelectorAll(".del-msg-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          if (!confirm("Delete this message?")) return;
+          if (!(await askConfirm("Delete this message?", "", { okText: "Delete" }))) return;
           await deleteDoc(doc(db, "rooms", activeRoomCode, "messages", btn.dataset.delMsg));
         });
       });
@@ -3077,7 +3254,7 @@
       grid.innerHTML = filtered.map((item) => `
         <div class="surface-card overflow-hidden relative">
           <button type="button" data-del-mem="${item.id}" title="Delete photo"
-            class="del-mem-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/65 text-white hover:text-rose-400 flex items-center justify-center text-xs transition">
+            class="hit-area del-mem-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/65 text-white hover:text-rose-400 flex items-center justify-center text-xs transition">
             <i class="fa-regular fa-trash-can"></i>
           </button>
           <img src="${item.url}" data-view-mem="${item.id}" class="view-mem-btn w-full h-36 object-cover cursor-pointer">
@@ -3098,14 +3275,14 @@
       grid.querySelectorAll(".del-mem-btn").forEach((btn) => {
         btn.addEventListener("click", async (e) => {
           e.stopPropagation();
-          if (!confirm("Delete this photo from Shared Gallery?")) return;
+          if (!(await askConfirm("Delete this photo?", "", { okText: "Delete" }))) return;
           await deleteDoc(doc(db, "rooms", activeRoomCode, "memories", btn.dataset.delMem));
         });
       });
     }
 
     document.getElementById("newAlbumBtn").addEventListener("click", async () => {
-      const name = prompt("Enter a new album name:");
+      const name = await askText("New album name");
       if (!name || !name.trim()) return;
       const clean = name.trim();
       if (!(spaceData.albums || []).includes(clean)) {
@@ -3117,7 +3294,7 @@
     document.getElementById("memoryPhotoInput").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const caption = prompt("Add a short caption:", "") || "Captured moment";
+      const caption = (await askText("Add a short caption", { placeholder: "Captured moment" })) || "Captured moment";
       const album = selectedAlbum === "All" ? "Moments" : selectedAlbum;
       const url = await compressImage(file, 1360, 0.85);
 
@@ -3223,11 +3400,11 @@
               </div>
               <div class="flex items-center gap-2.5">
                 <button type="button" data-pin-post="${post.id}" title="${isPinned ? "Unpin shared note" : "Pin note for both of you"}"
-                  class="pin-post-btn text-xs ${isPinned ? "accent-text" : "text-[var(--text-muted)] hover:accent-text"}">
+                  class="pin-post-btn p-2.5 text-xs ${isPinned ? "accent-text" : "text-[var(--text-muted)] hover:accent-text"}">
                   <i class="fa-solid fa-thumbtack"></i>
                 </button>
                 ${isMe ? `
-                  <button data-del="${post.id}" class="del-post-btn text-[var(--text-muted)] hover:text-rose-400 text-xs">
+                  <button data-del="${post.id}" class="del-post-btn p-2.5 text-[var(--text-muted)] hover:text-rose-400 text-xs">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>` : ""}
               </div>
@@ -3286,7 +3463,7 @@
 
       list.querySelectorAll(".comment-post-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const reply = prompt("Write a reply:");
+          const reply = await askText("Write a reply");
           if (!reply || !reply.trim()) return;
           const me = getMyProfile();
           await updateDoc(doc(db, "rooms", activeRoomCode, "posts", btn.dataset.comment), {
@@ -3343,7 +3520,7 @@
             </span>
             <span class="text-xs break-words ${item.done ? "line-through text-[var(--text-muted)]" : "text-[var(--text-main)]"}">${escapeHtml(item.text)}</span>
           </button>
-          <button type="button" data-del-someday="${item.id}" class="del-someday-btn text-[var(--text-muted)] hover:text-rose-400 text-xs shrink-0">
+          <button type="button" data-del-someday="${item.id}" class="del-someday-btn p-2.5 text-[var(--text-muted)] hover:text-rose-400 text-xs shrink-0">
             <i class="fa-regular fa-trash-can"></i>
           </button>
         </div>
@@ -3388,6 +3565,262 @@
         maybeAutoRefreshLocation();
       }
     });
+
+    const capApp = window.Capacitor?.Plugins?.App;
+    if (capApp?.addListener) {
+      capApp.addListener("backButton", () => {
+        const isOpen = (id) => !document.getElementById(id).classList.contains("hidden");
+
+        if (isOpen("dialogModal")) { dialogCancelFn?.(); return; }
+        if (isOpen("pinLockOverlay")) { capApp.exitApp(); return; }
+        if (isOpen("photoViewerModal")) { document.getElementById("closePhotoViewerBtn").click(); return; }
+
+        for (const id of ["emojiPickerModal", "statusModal", "notificationsModal", "profileModal", "settingsModal"]) {
+          if (isOpen(id)) { document.getElementById(id).classList.add("hidden"); return; }
+        }
+
+        if (isOpen("mainApp") && activeTab !== "home") { switchTab("home"); return; }
+        capApp.exitApp();
+      });
+    }
+
+    let baseViewportH = 0;
+    function syncKeyboardLayout() {
+      const vv = window.visualViewport;
+      if (vv && vv.scale > 1.01) return; // ignore pinch-zoom
+      const h = vv ? vv.height : window.innerHeight;
+      baseViewportH = Math.max(baseViewportH, h);
+      document.documentElement.style.setProperty("--app-h", h + "px");
+
+      const keyboardOpen = h < baseViewportH * 0.75;
+      document.body.classList.toggle("kb-open", keyboardOpen);
+
+      if (keyboardOpen && activeTab === "chat") {
+        const c = document.getElementById("chatMessagesContainer");
+        setTimeout(() => { c.scrollTop = c.scrollHeight; }, 50);
+      }
+    }
+    window.visualViewport?.addEventListener("resize", syncKeyboardLayout);
+    window.addEventListener("resize", syncKeyboardLayout);
+    syncKeyboardLayout();
+
+    // ==================== EXTRAS: TOAST, LOCAL TIME, MEETUP, HEART, PAUSE LOCATION, PUSH ====================
+    function showToast(text) {
+      const t = document.createElement("div");
+      t.textContent = text;
+      t.className = "surface-card px-4 py-2.5 text-xs font-semibold text-[var(--text-main)] shadow-lg";
+      t.style.cssText += "position:absolute;left:50%;top:calc(var(--safe-top) + 64px);transform:translateX(-50%);z-index:70;max-width:85%;";
+      document.querySelector(".app-shell").appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ---------- Her local time ----------
+    async function saveMyTimezone() {
+      if (!activeRoomCode || !currentUser) return;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!tz) return;
+      try {
+        await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), { timezone: tz });
+      } catch (_) {}
+    }
+
+    function renderLocalTimes() {
+      const now = new Date();
+      const me = getMyProfile();
+      const partner = getPartnerProfile();
+      const myTz = me.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const partnerTz = partner?.timezone || "";
+
+      const timeIn = (tz) => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz }).format(now);
+      const hourIn = (tz) => Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(now));
+      const noteFor = (h) => {
+        if (h >= 23 || h < 6) return "😴 Sleeping hours";
+        if (h < 9) return "🌅 Early morning";
+        if (h >= 21) return "🌙 Winding down";
+        return "☀️ Daytime";
+      };
+
+      const setCard = (prefix, label, tz, emptyNote) => {
+        document.getElementById(`${prefix}TimeLabel`).textContent = label;
+        try {
+          if (!tz) throw new Error("no tz");
+          document.getElementById(`${prefix}TimeText`).textContent = timeIn(tz);
+          document.getElementById(`${prefix}TimeNote`).textContent = noteFor(hourIn(tz));
+        } catch (_) {
+          document.getElementById(`${prefix}TimeText`).textContent = "—";
+          document.getElementById(`${prefix}TimeNote`).textContent = emptyNote;
+        }
+      };
+
+      setCard("my", me.name || "You", myTz, "");
+      setCard("partner", partner?.name || "Partner", partnerTz, partner ? "Waiting for their app" : "Not joined yet");
+    }
+
+    // ---------- Next meetup ----------
+    function renderMeetup() {
+      const cd = document.getElementById("meetupCountdown");
+      const dt = document.getElementById("meetupDateText");
+      if (!cd || !dt) return;
+      const raw = spaceData.nextMeetup;
+      if (!raw) {
+        cd.textContent = "Tap to set a date";
+        dt.textContent = "Add the day you'll see each other";
+        return;
+      }
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const target = new Date(raw + "T00:00:00");
+      const days = Math.round((target - today) / 86400000);
+      dt.textContent = target.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      if (days > 1) cd.textContent = `${days} days`;
+      else if (days === 1) cd.textContent = "Tomorrow ♡";
+      else if (days === 0) cd.textContent = "Today! ♡";
+      else {
+        cd.textContent = "Set the next date";
+        dt.textContent = "Your last meetup has passed";
+      }
+    }
+
+    document.getElementById("meetupCard").addEventListener("click", async () => {
+      if (!activeRoomCode) return;
+      const val = await askText("Next meetup", {
+        value: spaceData.nextMeetup || "",
+        inputType: "date",
+        message: "Pick the day you'll see each other. Clear the date to remove it."
+      });
+      if (val === null) return;
+      await updateDoc(doc(db, "rooms", activeRoomCode), { nextMeetup: val });
+    });
+
+    // ---------- Thinking of you ----------
+    let lastPingAt = 0;
+    document.getElementById("thinkingOfYouBtn").addEventListener("click", async () => {
+      if (!activeRoomCode || !currentUser) return;
+      if (!getPartnerProfile()) {
+        await showAlert("Your partner hasn't joined this space yet.");
+        return;
+      }
+      const label = document.getElementById("thinkingOfYouLabel");
+      if (Date.now() - lastPingAt < 20000) {
+        label.textContent = "Already sent ♡";
+        setTimeout(() => { label.textContent = "Thinking of you"; }, 1500);
+        return;
+      }
+      lastPingAt = Date.now();
+      navigator.vibrate?.(30);
+      try {
+        await addDoc(collection(db, "rooms", activeRoomCode, "pings"), {
+          senderUid: currentUser.uid,
+          type: "heart",
+          createdAt: serverTimestamp()
+        });
+        label.textContent = "Sent ♡";
+      } catch (err) {
+        lastPingAt = 0;
+        label.textContent = "Couldn't send";
+      }
+      setTimeout(() => { label.textContent = "Thinking of you"; }, 2500);
+    });
+
+    // ---------- Pause location sharing ----------
+    function renderShareLocationUI() {
+      const on = getMyProfile().shareLocation !== false;
+      const toggle = document.getElementById("shareLocToggle");
+      const knob = document.getElementById("shareLocKnob");
+      if (!toggle || !knob) return;
+      toggle.setAttribute("aria-checked", String(on));
+      toggle.classList.toggle("accent-bg", on);
+      toggle.style.backgroundColor = on ? "" : "var(--bg-card)";
+      toggle.style.border = "1px solid var(--border-soft)";
+      knob.style.backgroundColor = on ? "#ffffff" : "var(--text-muted)";
+      knob.style.transform = on ? "translateX(20px)" : "translateX(0)";
+      document.getElementById("shareLocSub").textContent = on
+        ? "On — your partner can see where you are"
+        : "Paused — your location is hidden";
+    }
+
+    document.getElementById("shareLocToggle").addEventListener("click", async () => {
+      if (!activeRoomCode || !currentUser) return;
+      const turningOn = getMyProfile().shareLocation === false;
+      const ref = doc(db, "rooms", activeRoomCode, "members", currentUser.uid);
+      try {
+        if (turningOn) {
+          await updateDoc(ref, { shareLocation: true });
+          refreshMyLocationPin({ silent: true, force: true });
+        } else {
+          await updateDoc(ref, { shareLocation: false, location: null });
+        }
+      } catch (err) {
+        await showAlert("Couldn't change this setting: " + (err?.message || err));
+      }
+    });
+
+    // ---------- Push notifications (Android) ----------
+    let pushListenersReady = false;
+    let myPushToken = "";
+
+    async function removeMyPushToken() {
+      if (!myPushToken || !activeRoomCode || !currentUser) return;
+      try {
+        await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+          fcmTokens: arrayRemove(myPushToken)
+        });
+      } catch (_) {}
+    }
+
+    async function setupPush() {
+      const cap = window.Capacitor;
+      const push = cap?.Plugins?.PushNotifications;
+      if (!cap?.isNativePlatform?.() || !push || !activeRoomCode || !currentUser) return;
+
+      try {
+        if (!pushListenersReady) {
+          pushListenersReady = true;
+
+          push.addListener("registration", async (t) => {
+            myPushToken = t.value;
+            if (!activeRoomCode || !currentUser) return;
+            try {
+              await updateDoc(doc(db, "rooms", activeRoomCode, "members", currentUser.uid), {
+                fcmTokens: arrayUnion(t.value)
+              });
+            } catch (_) {}
+          });
+
+          push.addListener("registrationError", (e) => console.warn("Push registration error", e));
+
+          push.addListener("pushNotificationReceived", (n) => {
+            if (n?.data?.tab && n.data.tab === activeTab) return;
+            showToast(`${n.title || "Lereio"}: ${n.body || ""}`);
+          });
+
+          push.addListener("pushNotificationActionPerformed", (a) => {
+            const tab = a?.notification?.data?.tab;
+            if (tab) switchTab(tab);
+          });
+        }
+
+        await push.createChannel?.({
+          id: "lereio_default",
+          name: "Lereio messages",
+          importance: 4,
+          visibility: 0,
+          vibration: true
+        });
+
+        let perm = await push.checkPermissions();
+        if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
+          perm = await push.requestPermissions();
+        }
+        if (perm.receive !== "granted") return;
+        await push.register();
+      } catch (err) {
+        console.warn("Push setup failed", err);
+      }
+    }
+
+    // ---------- Keep time and countdown fresh ----------
+    setInterval(() => { renderLocalTimes(); renderMeetup(); }, 15000);
   </script>
 </body>
 </html>

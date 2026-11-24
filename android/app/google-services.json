@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "625861224922",
+    "project_id": "solace-couple",
+    "storage_bucket": "solace-couple.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625861224922:android:537fbf6fed465d4067b8e3",
+        "android_client_info": {
+          "package_name": "com.zainola.lereio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy43ihxIX12HcmPQlJromtKiseraPiK1Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "625861224922-lq6tt0umj49dhfeijcesm741u9f9nir5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
