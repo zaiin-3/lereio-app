@@ -974,6 +974,9 @@
     // Baseline distance scale for the visual distance progress marker (~805 km)
     const DISTANCE_TRACK_SCALE_KM = 805;
 
+    // Auto-refresh location cooldown while Lereio is open (10 minutes)
+    const AUTO_LOC_COOLDOWN_MS = 10 * 60 * 1000;
+
     const ACCENTS = {
       blue:    { dark: "#60a5fa", darkContrast: "#08111e", light: "#2563eb", lightContrast: "#ffffff", soft: "rgba(96, 165, 250, 0.14)", glow: "rgba(96, 165, 250, 0.11)" },
       rose:    { dark: "#f472b6", darkContrast: "#1a0811", light: "#db2777", lightContrast: "#ffffff", soft: "rgba(244, 114, 182, 0.14)", glow: "rgba(244, 114, 182, 0.11)" },
@@ -1037,6 +1040,7 @@
     let unsubscribers = [];
     let lastSyncedAt = Date.now();
     let userSentNewChat = false;
+    let lastAutoLocAttemptAt = 0;
 
     let leafletMap = null;
     let leafletTileLayer = null;
@@ -1830,6 +1834,7 @@
       if (settingsCodeEl) settingsCodeEl.textContent = code;
 
       startRoomListeners(code);
+      setTimeout(() => maybeAutoRefreshLocation(), 1200);
 
       if (promptProfileSetup) {
         setTimeout(() => openProfileEditor(), 350);
@@ -2178,7 +2183,7 @@
       renderNotifications();
     });
 
-    // ==================== INTERACTIVE MINI-MAP & DYNAMIC PINNED DISTANCE TRACK ====================
+    // ==================== INTERACTIVE MINI-MAP, DISTANCE TRACK & AUTO-REFRESH ====================
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
       const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -2432,9 +2437,10 @@
       });
     }
 
-    document.getElementById("updateLocationBtn").addEventListener("click", async () => {
+    async function refreshMyLocationPin({ silent = false } = {}) {
+      if (!activeRoomCode || !currentUser) return;
       const icon = document.getElementById("locSpinIcon");
-      icon.classList.add("fa-spin");
+      icon?.classList.add("fa-spin");
 
       try {
         const { lat, lng } = await obtainCurrentCoords();
@@ -2451,10 +2457,31 @@
           location: { lat, lng, place, updatedAt: Date.now() }
         });
       } catch (err) {
-        alert("Please allow location permission: " + (err?.message || err));
+        if (!silent) {
+          alert("Please allow location permission: " + (err?.message || err));
+        }
       } finally {
-        icon.classList.remove("fa-spin");
+        icon?.classList.remove("fa-spin");
       }
+    }
+
+    function maybeAutoRefreshLocation() {
+      if (!activeRoomCode || !currentUser) return;
+      const me = getMyProfile();
+      if (!me?.location) return;
+
+      const now = Date.now();
+      const lastPinTime = me.location.updatedAt || 0;
+      if (now - lastAutoLocAttemptAt < AUTO_LOC_COOLDOWN_MS) return;
+      if (now - lastPinTime < AUTO_LOC_COOLDOWN_MS) return;
+
+      lastAutoLocAttemptAt = now;
+      refreshMyLocationPin({ silent: true });
+    }
+
+    document.getElementById("updateLocationBtn").addEventListener("click", () => {
+      lastAutoLocAttemptAt = Date.now();
+      refreshMyLocationPin({ silent: false });
     });
 
     // ==================== HOME START DATE, MONTHSARY & ANNIVERSARY ====================
@@ -2745,8 +2772,9 @@
       } else if (tabName === "feed") {
         setLastSeenEntry("feed", Date.now());
         renderSomedayList();
-      } else if (tabName === "home" && leafletMap) {
-        setTimeout(() => leafletMap.invalidateSize(), 100);
+      } else if (tabName === "home") {
+        if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 100);
+        maybeAutoRefreshLocation();
       }
 
       const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
@@ -3353,6 +3381,12 @@
       };
       const updated = [newItem, ...(Array.isArray(spaceData.somedayItems) ? spaceData.somedayItems : [])];
       await updateDoc(doc(db, "rooms", activeRoomCode), { somedayItems: updated });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        maybeAutoRefreshLocation();
+      }
     });
   </script>
 </body>
