@@ -77,6 +77,19 @@
       overflow: hidden;
       transition: background-color 0.25s ease, color 0.25s ease;
     }
+    .app-shell::before {
+      content: "♡";
+      position: absolute;
+      top: 12%;
+      right: -16px;
+      font-size: 220px;
+      line-height: 1;
+      color: var(--accent);
+      opacity: 0.05;
+      transform: rotate(14deg);
+      pointer-events: none;
+      z-index: 0;
+    }
 
     @media (min-width: 460px) {
       .app-shell {
