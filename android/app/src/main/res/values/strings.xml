@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Lereio</string>
+    <string name="app_name">Toby</string>
     <string name="title_activity_main">Lereio</string>
     <string name="package_name">com.zainola.lereio</string>
     <string name="custom_url_scheme">com.zainola.lereio</string>
