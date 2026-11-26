@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#171119" />
   <title>Toby</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="./web/assets/tailwind.css">
+  <link rel="stylesheet" href="./web/assets/fonts/fonts.css">
+  <link rel="stylesheet" href="./web/assets/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="./web/assets/vendor/leaflet/leaflet.css" />
+  <script src="./web/assets/vendor/leaflet/leaflet.js"></script>
 
   <style>
     :root {
@@ -934,7 +932,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="font-editorial text-3xl text-[var(--text-main)]">Daily Rhythm</h3>
-            <p class="text-[11px] text-[var(--text-muted)]">Stays visible for 24 hours</p>
+            <p class="text-[11px] text-[var(--text-muted)]">A quick check-in for the two of us</p>
           </div>
           <button onclick="document.getElementById('statusModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
             <i class="fa-solid fa-xmark"></i>
@@ -1173,14 +1171,16 @@
     ];
 
     const STATUS_PRESETS = [
-      "🎒 Heading to class/work",
-      "🌧️ Rainy day here",
-      "📶 Signal's spotty",
-      "🥺 Missing you",
-      "😴 Sleepy",
-      "🍜 Eating",
-      "🥰 Thinking of you",
-      "✨ Free to talk"
+      "🎒 heading to class",
+      "📚 studying / reviewing",
+      "🏫 on campus / school",
+      "🌧️ raining",
+      "📶 slow internet",
+      "🥺 missing you",
+      "😴 eepy",
+      "🍜 eating",
+      "💭 thinking of you",
+      "🦉 can't sleep"
     ];
 
     const MOOD_CHOICES = [
@@ -4023,7 +4023,7 @@
       const noteFor = (h) => {
         if (h >= 23 || h < 6) return "😴 Sleeping hours";
         if (h < 9) return "🌅 Early morning";
-        if (h >= 21) return "🌙 Winding down";
+        if (h >= 18) return "🌙 Evening";
         return "☀️ Daytime";
       };
 
