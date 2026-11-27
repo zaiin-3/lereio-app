@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#171119" />
   <title>Toby</title>
-  <link rel="stylesheet" href="./assets/tailwind.css">
-  <link rel="stylesheet" href="./assets/fonts/fonts.css">
-  <link rel="stylesheet" href="./assets/vendor/fontawesome/css/all.min.css">
-  <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css" />
-  <script src="./assets/vendor/leaflet/leaflet.js"></script>
+  <link rel="stylesheet" href="./web/assets/tailwind.css">
+  <link rel="stylesheet" href="./web/assets/fonts/fonts.css">
+  <link rel="stylesheet" href="./web/assets/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="./web/assets/vendor/leaflet/leaflet.css" />
+  <script src="./web/assets/vendor/leaflet/leaflet.js"></script>
 
   <style>
     :root {
@@ -932,7 +932,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="font-editorial text-3xl text-[var(--text-main)]">Daily Rhythm</h3>
-            <p class="text-[11px] text-[var(--text-muted)]">Stays visible for 24 hours</p>
+            <p class="text-[11px] text-[var(--text-muted)]">A quick check-in for the two of us</p>
           </div>
           <button onclick="document.getElementById('statusModal').classList.add('hidden')" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
             <i class="fa-solid fa-xmark"></i>
@@ -1151,7 +1151,7 @@
     const LOCAL_ROOM_HINT_KEY = "lereio_last_room_code_v1";
     const LOCAL_PREV_ROOM_KEY = "lereio_previous_room_code_v1";
 
-    const DISTANCE_TRACK_SCALE_KM = 805;
+    const DISTANCE_TRACK_SCALE_KM = 850;
     const AUTO_LOC_COOLDOWN_MS = 10 * 60 * 1000;
     const STATUS_EXPIRY_MS = 24 * 60 * 60 * 1000;
     const DEFAULT_MY_STATUS = "💭 Set rhythm...";
@@ -1171,14 +1171,16 @@
     ];
 
     const STATUS_PRESETS = [
-      "🎒 Heading to class/work",
-      "🌧️ Rainy day here",
-      "📶 Signal's spotty",
-      "🥺 Missing you",
-      "😴 Sleepy",
-      "🍜 Eating",
-      "🥰 Thinking of you",
-      "✨ Free to talk"
+      "🎒 heading to class",
+      "📚 studying / reviewing",
+      "🏫 on campus / school",
+      "🌧️ raining",
+      "📶 slow internet",
+      "🥺 missing you",
+      "😴 eepy",
+      "🍜 eating",
+      "💭 thinking of you",
+      "🦉 can't sleep"
     ];
 
     const MOOD_CHOICES = [
@@ -1233,6 +1235,7 @@
     let activeViewerDataUrl = "";
     let activeViewerMemory = null;
     let unsubscribers = [];
+    let loadOlderMemories = null;
     let lastSyncedAt = Date.now();
     let userSentNewChat = false;
     let lastAutoLocAttemptAt = 0;
@@ -1517,6 +1520,14 @@
       const acc = ACCENTS[currentAccent];
       const root = document.documentElement.style;
 
+      try {
+        const statusBar = window.Capacitor?.Plugins?.StatusBar;
+        if (statusBar) {
+          statusBar.setStyle({ style: currentMode === "dark" ? "DARK" : "LIGHT" });
+          statusBar.setBackgroundColor({ color: currentMode === "dark" ? "#171119" : "#fdf8fa" });
+        }
+      } catch (_) {}
+
       if (currentMode === "light") {
         root.setProperty("--bg-outer", "#e8dde4");
         root.setProperty("--bg-base", "#fdf8fa");
@@ -1675,7 +1686,13 @@
         try { unsub(); } catch (_) {}
       });
       unsubscribers = [];
+      loadOlderMemories = null;
+      document.getElementById("loadOlderMemoriesBtn").classList.add("hidden");
     }
+
+    document.getElementById("loadOlderMemoriesBtn").addEventListener("click", () => {
+      if (loadOlderMemories) loadOlderMemories();
+    });
 
     function closeAllModals() {
       document.getElementById("settingsModal").classList.add("hidden");
@@ -2177,23 +2194,50 @@
         renderMood();
       }));
 
-      const chatQ = query(collection(db, "rooms", code, "messages"), orderBy("createdAt", "asc"));
-      unsubscribers.push(onSnapshot(chatQ, (snap) => {
-        allMessages = [];
-        snap.forEach((d) => allMessages.push({ id: d.id, ...d.data() }));
-        markSyncedNow();
-        renderChat(allMessages);
-        renderNotifications();
-      }));
+      let chatLimit = 50;
+      let unsubscribeChat = null;
+      const listenToChat = () => {
+        if (unsubscribeChat) unsubscribeChat();
+        const chatQ = query(collection(db, "rooms", code, "messages"), orderBy("createdAt", "desc"), limit(chatLimit));
+        unsubscribeChat = onSnapshot(chatQ, (snap) => {
+          allMessages = [];
+          snap.forEach((d) => allMessages.push({ id: d.id, ...d.data() }));
+          allMessages = [...allMessages].reverse();
+          markSyncedNow();
+          renderChat(allMessages, snap.size === chatLimit, () => {
+            chatLimit += 50;
+            listenToChat();
+          });
+          renderNotifications();
+        });
+      };
+      listenToChat();
+      unsubscribers.push(() => {
+        if (unsubscribeChat) unsubscribeChat();
+      });
 
-      const memQ = query(collection(db, "rooms", code, "memories"), orderBy("createdAt", "desc"));
-      unsubscribers.push(onSnapshot(memQ, (snap) => {
-        allMemories = [];
-        snap.forEach((d) => allMemories.push({ id: d.id, ...d.data() }));
-        markSyncedNow();
-        renderMemories();
-        renderNotifications();
-      }));
+      let memoriesLimit = 30;
+      let unsubscribeMemories = null;
+      const listenToMemories = () => {
+        if (unsubscribeMemories) unsubscribeMemories();
+        const memQ = query(collection(db, "rooms", code, "memories"), orderBy("createdAt", "desc"), limit(memoriesLimit));
+        unsubscribeMemories = onSnapshot(memQ, (snap) => {
+          allMemories = [];
+          snap.forEach((d) => allMemories.push({ id: d.id, ...d.data() }));
+          document.getElementById("loadOlderMemoriesBtn").classList.toggle("hidden", snap.size < memoriesLimit);
+          markSyncedNow();
+          renderMemories();
+          renderNotifications();
+        });
+      };
+      loadOlderMemories = () => {
+        memoriesLimit += 30;
+        listenToMemories();
+      };
+      listenToMemories();
+      unsubscribers.push(() => {
+        if (unsubscribeMemories) unsubscribeMemories();
+      });
 
       const feedQ = query(collection(db, "rooms", code, "posts"), orderBy("createdAt", "desc"));
       unsubscribers.push(onSnapshot(feedQ, (snap) => {
@@ -3161,16 +3205,14 @@
       const item = sourceList.find((x) => x.id === docId);
       if (!item || !emoji) return;
 
-      const currentReactions = { ...(item.reactions || {}) };
+      const currentReactions = item.reactions || {};
       const listForEmoji = Array.isArray(currentReactions[emoji]) ? [...currentReactions[emoji]] : [];
-      if (listForEmoji.includes(currentUser.uid)) {
-        currentReactions[emoji] = listForEmoji.filter((id) => id !== currentUser.uid);
-      } else {
-        currentReactions[emoji] = [...listForEmoji, currentUser.uid];
-      }
+      const nextUids = listForEmoji.includes(currentUser.uid)
+        ? listForEmoji.filter((id) => id !== currentUser.uid)
+        : [...listForEmoji, currentUser.uid];
 
       await updateDoc(doc(db, "rooms", activeRoomCode, collectionName, docId), {
-        reactions: currentReactions
+        [`reactions.${emoji}`]: nextUids
       });
     }
 
@@ -3227,12 +3269,36 @@
     }
 
     // ==================== CHAT ====================
-    function renderChat(messages) {
+    function getLocalCalendarDateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getChatDayDividerLabel(date) {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateKey = getLocalCalendarDateKey(date);
+
+      if (dateKey === getLocalCalendarDateKey(today)) return "Today";
+      if (dateKey === getLocalCalendarDateKey(yesterday)) return "Yesterday";
+
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        ...(date.getFullYear() !== today.getFullYear() ? { year: "numeric" } : {})
+      });
+    }
+
+    function renderChat(messages, hasOlderMessages = false, onLoadOlderMessages = null) {
       const container = document.getElementById("chatMessagesContainer");
       const prevScrollTop = container.scrollTop;
       const prevScrollHeight = container.scrollHeight;
       const wasNearBottom = prevScrollHeight - (prevScrollTop + container.clientHeight) < 90;
       const isInitialEmpty = prevScrollHeight === 0;
+      let previousDateKey = null;
 
       if (messages.length === 0) {
         container.innerHTML = `
@@ -3245,17 +3311,29 @@
         return;
       }
 
-      container.innerHTML = messages.map((msg) => {
+      container.innerHTML = `${hasOlderMessages ? `
+        <button type="button" data-load-older-chat
+          class="w-full py-2.5 rounded-xl surface-pill text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition">
+          Load older messages
+        </button>
+      ` : ""}${messages.map((msg) => {
         const isMe = msg.senderUid === currentUser.uid;
         const senderProf = membersMap[msg.senderUid] || { name: "Partner", photo: "" };
-        const timeStr = msg.createdAt?.toDate
-          ? msg.createdAt.toDate().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+        const messageDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : null;
+        const dateKey = messageDate ? getLocalCalendarDateKey(messageDate) : null;
+        const dayDividerHtml = dateKey && dateKey !== previousDateKey
+          ? `<div class="w-full flex items-center justify-center py-1"><span class="px-3 py-1 rounded-full surface-pill text-[10px] text-[var(--text-muted)]">${getChatDayDividerLabel(messageDate)}</span></div>`
+          : "";
+        if (dateKey) previousDateKey = dateKey;
+        const timeStr = messageDate
+          ? messageDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
           : "Sending...";
         const editedLabel = msg.edited ? ` · edited` : "";
         const badgesHtml = buildChatReactionBadges(msg);
 
         if (isMe) {
           return `
+            ${dayDividerHtml}
             <div class="flex flex-col items-end group">
               <div class="flex items-center gap-1.5 max-w-[86%]">
                 <button type="button" data-open-msg-picker="${msg.id}" title="React"
@@ -3286,6 +3364,7 @@
             : `<div class="w-6 h-6 rounded-full surface-pill accent-text text-[10px] font-bold flex items-center justify-center shrink-0 mb-4">${escapeHtml((senderProf.name || "♡")[0].toUpperCase())}</div>`;
 
           return `
+            ${dayDividerHtml}
             <div class="flex items-end gap-2">
               ${avatarHtml}
               <div class="flex flex-col items-start max-w-[82%]">
@@ -3305,7 +3384,12 @@
             </div>
           `;
         }
-      }).join("");
+      }).join("")}`;
+
+      const loadOlderButton = container.querySelector("[data-load-older-chat]");
+      if (loadOlderButton && onLoadOlderMessages) {
+        loadOlderButton.addEventListener("click", onLoadOlderMessages);
+      }
 
       container.querySelectorAll(".open-msg-picker-btn").forEach((btn) => {
         btn.addEventListener("click", () => openEmojiPicker("messages", btn.dataset.openMsgPicker));
