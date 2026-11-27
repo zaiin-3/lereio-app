@@ -1127,7 +1127,7 @@
     import {
       initializeFirestore, persistentLocalCache,
       doc, setDoc, getDoc, updateDoc, deleteDoc,
-      collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove
+      collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove, FieldPath
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -2196,6 +2196,7 @@
 
       let chatLimit = 50;
       let unsubscribeChat = null;
+      let preserveChatScroll = false;
       const listenToChat = () => {
         if (unsubscribeChat) unsubscribeChat();
         const chatQ = query(collection(db, "rooms", code, "messages"), orderBy("createdAt", "desc"), limit(chatLimit));
@@ -2204,10 +2205,13 @@
           snap.forEach((d) => allMessages.push({ id: d.id, ...d.data() }));
           allMessages = [...allMessages].reverse();
           markSyncedNow();
+          const shouldPreserveChatScroll = preserveChatScroll;
+          preserveChatScroll = false;
           renderChat(allMessages, snap.size === chatLimit, () => {
+            preserveChatScroll = true;
             chatLimit += 50;
             listenToChat();
-          });
+          }, shouldPreserveChatScroll);
           renderNotifications();
         });
       };
@@ -3211,9 +3215,11 @@
         ? listForEmoji.filter((id) => id !== currentUser.uid)
         : [...listForEmoji, currentUser.uid];
 
-      await updateDoc(doc(db, "rooms", activeRoomCode, collectionName, docId), {
-        [`reactions.${emoji}`]: nextUids
-      });
+      await updateDoc(
+        doc(db, "rooms", activeRoomCode, collectionName, docId),
+        new FieldPath("reactions", emoji),
+        nextUids
+      );
     }
 
     function openEmojiPicker(collectionName, docId) {
@@ -3292,7 +3298,7 @@
       });
     }
 
-    function renderChat(messages, hasOlderMessages = false, onLoadOlderMessages = null) {
+    function renderChat(messages, hasOlderMessages = false, onLoadOlderMessages = null, preserveReadingPosition = false) {
       const container = document.getElementById("chatMessagesContainer");
       const prevScrollTop = container.scrollTop;
       const prevScrollHeight = container.scrollHeight;
@@ -3434,7 +3440,9 @@
         });
       });
 
-      if (userSentNewChat || wasNearBottom || isInitialEmpty) {
+      if (preserveReadingPosition) {
+        container.scrollTop = prevScrollTop + (container.scrollHeight - prevScrollHeight);
+      } else if (userSentNewChat || wasNearBottom || isInitialEmpty) {
         container.scrollTop = container.scrollHeight;
       } else {
         container.scrollTop = prevScrollTop;
